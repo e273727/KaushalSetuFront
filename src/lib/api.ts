@@ -94,7 +94,7 @@ export function getUserGapCompetencies(user: any): CompetencyItem[] {
           description: `Test-verified baseline score from onboarding diagnostic assessment.`,
         }));
       }
-    } catch {}
+    } catch { }
   }
   return MOCK_COMPETENCIES;
 }
@@ -136,7 +136,7 @@ export function getDisplayName(user?: any): string {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.fullName && parsed.fullName.trim().length > 0) return parsed.fullName;
-      } catch {}
+      } catch { }
     }
   }
 
@@ -164,13 +164,13 @@ export const MOCK_COURSES: CourseItem[] = [
   },
   {
     id: "course-2",
-    title: "Python for Statistical Data Analysis in Governance",
+    title: "Python for Data Analysis in Public Sector",
     description: "Hands-on Pandas & NumPy computing tailored for public sector census and survey data.",
     provider: "iGOT Karmayogi",
     source: "igot",
     level: 3,
     durationMinutes: 180,
-    courseUrl: "https://igotkarmayogi.gov.in/courses/python",
+    courseUrl: "https://portal.igotkarmayogi.gov.in/public/toc/do_1137349858229288961285/overview",
     competencies: ["Python for Statistics", "Data Visualization"],
   },
   {
@@ -197,14 +197,14 @@ export const MOCK_COURSES: CourseItem[] = [
   },
   {
     id: "course-5",
-    title: "Applied AI & Machine Learning for Public Policy",
+    title: "AI Using Google Bard and ChatGPT for Beginners",
     description: "Machine learning applications, predictive modelling, and NLP in governance.",
     provider: "iGOT Karmayogi",
     source: "igot",
     level: 3,
     durationMinutes: 300,
-    courseUrl: "https://igotkarmayogi.gov.in/courses/ai-policy",
-    competencies: ["AI & Machine Learning"],
+    courseUrl: "https://portal.igotkarmayogi.gov.in/public/toc/do_113923174474121216195/overview",
+    competencies: ["Google Bard & ChatGPT"],
   },
 ];
 

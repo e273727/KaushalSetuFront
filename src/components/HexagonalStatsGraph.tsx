@@ -1,297 +1,381 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { ZoomIn, ZoomOut, Maximize2, Target, CheckCircle2, ArrowRight, Info, Layers, Flame } from "lucide-react";
+import { Link } from "wouter";
 
-export interface CompetencyDataPoint {
+export interface RadarDataPoint {
   name: string;
-  currentLevel: number; // Level 1 to 5
-  targetLevel: number;  // Level 1 to 5
+  currentLevel: number; // 1 - 5
+  targetLevel: number;  // 1 - 5
 }
+
+export type CompetencyDataPoint = RadarDataPoint;
 
 interface HexagonalStatsGraphProps {
-  data?: CompetencyDataPoint[];
+  data: RadarDataPoint[];
   targetRole?: string;
-  className?: string;
 }
 
-const DEFAULT_DATA: CompetencyDataPoint[] = [
-  { name: "Sampling Techniques", currentLevel: 3, targetLevel: 5 },
-  { name: "Python Statistics", currentLevel: 2, targetLevel: 4 },
-  { name: "SQL Querying", currentLevel: 3, targetLevel: 4 },
-  { name: "Data Quality & Audit", currentLevel: 3, targetLevel: 4 },
-  { name: "Digital Governance", currentLevel: 4, targetLevel: 4 },
-  { name: "Data Visualization", currentLevel: 2, targetLevel: 4 },
-];
+export default function HexagonalStatsGraph({ data, targetRole = "Data Scientist" }: HexagonalStatsGraphProps) {
+  if (!data || data.length === 0) return null;
 
-export default function HexagonalStatsGraph({
-  data = DEFAULT_DATA,
-  targetRole = "Statistical Officer",
-  className = "",
-}: HexagonalStatsGraphProps) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  // Canvas Geometry & Expanded Coordinates to prevent text clipping
+  const numPoints = data.length;
+  const maxVal = 5;
+  const center = 270;
+  const radius = 120;
+  const labelRadius = 165;
 
-  // Clean and validate incoming data
-  const validData = (data && data.length > 0 ? data : DEFAULT_DATA)
-    .slice(0, 6)
-    .map((d) => ({
-      name: d.name || "Competency",
-      currentLevel: Math.max(1, Math.min(5, Number(d.currentLevel) || 2)),
-      targetLevel: Math.max(1, Math.min(5, Number(d.targetLevel) || 4)),
-    }));
+  // NotebookLM Pan & Zoom State
+  const [zoomScale, setZoomScale] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // SVG Geometry Dimensions with extra margin for axis labels
-  const svgWidth = 380;
-  const svgHeight = 340;
-  const cx = svgWidth / 2;
-  const cy = svgHeight / 2;
-  const maxRadius = 110;
-  const numLevels = 5;
-  const numVertices = validData.length;
+  // Interactive Hover & Click Focus State
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(0);
 
-  // Compute angle for each vertex starting at top (-pi/2)
-  const getAngle = (index: number) => {
-    return (Math.PI * 2 * index) / numVertices - Math.PI / 2;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Zoom Handler Controls
+  const handleZoomIn = () => setZoomScale((z) => Math.min(1.8, z + 0.15));
+  const handleZoomOut = () => setZoomScale((z) => Math.max(0.6, z - 0.15));
+  const handleResetZoom = () => {
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
   };
 
-  // Convert (radius, vertexIndex) to SVG coordinates (x, y)
-  const getPoint = (radius: number, index: number) => {
-    const angle = getAngle(index);
-    return {
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-    };
+  // Mouse Drag Panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest(".interactive-vertex")) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
   };
 
-  // Generate SVG polygon points string from radius values array
-  const getPolygonPoints = (levels: number[]) => {
-    return levels
-      .map((lvl, idx) => {
-        const safeLvl = Math.min(5, Math.max(0, Number(lvl) || 1));
-        const r = (safeLvl / numLevels) * maxRadius;
-        const pt = getPoint(r, idx);
-        return `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`;
-      })
-      .join(" ");
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPanOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
   };
 
-  const currentLevels = validData.map((d) => d.currentLevel);
-  const targetLevels = validData.map((d) => d.targetLevel);
+  const handleMouseUp = () => setIsDragging(false);
 
-  const currentPolyPoints = getPolygonPoints(currentLevels);
-  const targetPolyPoints = getPolygonPoints(targetLevels);
+  // Coordinate Calculations
+  const getCoordinates = (index: number, value: number) => {
+    const safeVal = isNaN(value) ? 0 : Math.min(maxVal, Math.max(0, value));
+    const angle = (Math.PI * 2 / numPoints) * index - Math.PI / 2;
+    const r = (safeVal / maxVal) * radius;
+    const x = center + r * Math.cos(angle);
+    const y = center + r * Math.sin(angle);
+    return { x, y };
+  };
 
-  // Overall readiness percentage calculation
-  const totalCurrent = currentLevels.reduce((acc, curr) => acc + curr, 0);
-  const totalTarget = targetLevels.reduce((acc, curr) => acc + curr, 0);
-  const readinessPercent = Math.min(100, Math.round((totalCurrent / Math.max(1, totalTarget)) * 100));
+  const getLabelCoordinates = (index: number) => {
+    const angle = (Math.PI * 2 / numPoints) * index - Math.PI / 2;
+    const x = center + labelRadius * Math.cos(angle);
+    const y = center + labelRadius * Math.sin(angle);
+    return { x, y };
+  };
+
+  const targetPoints = data.map((d, i) => {
+    const { x, y } = getCoordinates(i, d.targetLevel);
+    return `${x},${y}`;
+  }).join(" ");
+
+  const currentPoints = data.map((d, i) => {
+    const { x, y } = getCoordinates(i, d.currentLevel);
+    return `${x},${y}`;
+  }).join(" ");
+
+  const activeItem = selectedIdx !== null ? data[selectedIdx] : null;
 
   return (
-    <div className={`p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4 ${className}`}>
-      {/* Header Info */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-emerald-400" />
-            <h3 className="font-bold text-white text-sm">Competency Comparison Radar</h3>
+    <div className="p-5 md:p-6 rounded-2xl bg-white border border-slate-200 space-y-4 shadow-sm overflow-hidden w-full text-[#0f172a]">
+      {/* Header & Floating NotebookLM Toolbar */}
+      <div className="flex flex-col gap-3 border-b border-slate-200 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-900 text-[10px] font-bold uppercase tracking-wider">
+                Interactive Radar Matrix
+              </Badge>
+              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] font-bold">
+                NotebookLM View Active
+              </Badge>
+            </div>
+            <h2 className="text-base md:text-lg font-bold text-[#0f172a] tracking-tight mt-1">
+              Competency Skill-Gap Radar ({targetRole})
+            </h2>
           </div>
-          <p className="text-xs text-slate-400">
-            Overlaid analysis: Current Baseline vs <strong className="text-purple-400">{targetRole}</strong> Standard
-          </p>
+
+          {/* Floating NotebookLM Toolbar Controls */}
+          <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 p-1 rounded-xl shadow-xs self-start sm:self-auto">
+            <Button
+              onClick={handleZoomIn}
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-slate-700 hover:bg-slate-200 rounded-lg"
+              title="Zoom In"
+            >
+              <ZoomIn className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              onClick={handleZoomOut}
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-slate-700 hover:bg-slate-200 rounded-lg"
+              title="Zoom Out"
+            >
+              <ZoomOut className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              onClick={handleResetZoom}
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-[11px] font-bold text-blue-900 hover:bg-blue-50 rounded-lg flex items-center gap-1"
+              title="Reset Zoom"
+            >
+              <Maximize2 className="h-3 w-3" /> Fit
+            </Button>
+            <span className="text-[10px] font-extrabold text-slate-600 px-2 border-l border-slate-200">
+              {Math.round(zoomScale * 100)}%
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs px-2.5 py-1">
-            {readinessPercent}% Role Readiness
-          </Badge>
+        {/* Legend */}
+        <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 px-3.5 py-1.5 rounded-xl text-xs font-bold w-fit">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm bg-[#1e3a8a] inline-block border border-blue-900" />
+            <span className="text-[#1e3a8a]">Target Benchmark</span>
+          </div>
+          <span className="text-slate-300">|</span>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm bg-emerald-600 inline-block border border-emerald-700" />
+            <span className="text-emerald-700">Current Level</span>
+          </div>
         </div>
       </div>
 
-      {/* Main Comparative Graph */}
-      <div className="relative flex flex-col items-center justify-center min-h-[320px]">
-        <svg
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="w-full max-w-[380px] h-auto overflow-visible select-none"
+      {/* NOTEBOOKLM INTERACTIVE CANVAS (Pan, Drag & Click Node Inspection) */}
+      <div
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        className={`flex justify-center items-center py-4 bg-slate-50/50 rounded-xl border border-slate-200 overflow-hidden relative select-none cursor-grab ${
+          isDragging ? "cursor-grabbing" : ""
+        }`}
+      >
+        <div
+          style={{
+            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
+            transformOrigin: "center center",
+            transition: isDragging ? "none" : "transform 0.15s ease-out",
+          }}
+          className="w-full max-w-[540px]"
         >
-          <defs>
-            {/* Emerald Fill Gradient */}
-            <radialGradient id="currentGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
-              <stop offset="100%" stopColor="#059669" stopOpacity="0.15" />
-            </radialGradient>
-            {/* Purple Fill Gradient */}
-            <radialGradient id="targetGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.05" />
-            </radialGradient>
-
-            {/* Glowing Drop Shadows */}
-            <filter id="emeraldShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#10b981" floodOpacity="0.6" />
-            </filter>
-            <filter id="purpleShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#6366f1" floodOpacity="0.5" />
-            </filter>
-          </defs>
-
-          {/* Concentric Hexagonal Level Grid Lines (Levels 1 to 5) */}
-          {[1, 2, 3, 4, 5].map((lvl) => {
-            const gridRadius = (lvl / numLevels) * maxRadius;
-            const gridPoints = Array.from({ length: numVertices })
-              .map((_, idx) => {
-                const pt = getPoint(gridRadius, idx);
-                return `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`;
-              })
-              .join(" ");
-
-            return (
-              <polygon
-                key={lvl}
-                points={gridPoints}
-                fill="none"
-                stroke="#334155"
-                strokeWidth="1"
-                strokeDasharray={lvl === 5 ? "none" : "2,2"}
-                opacity={0.6}
-              />
-            );
-          })}
-
-          {/* Radial Axis Lines from Center to Outer Vertices */}
-          {Array.from({ length: numVertices }).map((_, idx) => {
-            const outerPt = getPoint(maxRadius, idx);
-            return (
-              <line
-                key={idx}
-                x1={cx}
-                y1={cy}
-                x2={outerPt.x}
-                y2={outerPt.y}
-                stroke="#334155"
-                strokeWidth="1"
-                opacity={0.5}
-              />
-            );
-          })}
-
-          {/* POLYGON LAYER 1: Target Level Standard (Indigo/Purple Layer) */}
-          <polygon
-            points={targetPolyPoints}
-            fill="url(#targetGlow)"
-            stroke="#818cf8"
-            strokeWidth="2"
-            strokeDasharray="4,4"
-            filter="url(#purpleShadow)"
-            className="transition-all duration-500"
-          />
-
-          {/* POLYGON LAYER 2: Current Verified User Level (Emerald/Cyan Layer) */}
-          <polygon
-            points={currentPolyPoints}
-            fill="url(#currentGlow)"
-            stroke="#10b981"
-            strokeWidth="2.5"
-            filter="url(#emeraldShadow)"
-            className="transition-all duration-500"
-          />
-
-          {/* Vertex Dots & Interactive Hover Regions */}
-          {validData.map((d, idx) => {
-            const currentR = (d.currentLevel / numLevels) * maxRadius;
-            const targetR = (d.targetLevel / numLevels) * maxRadius;
-
-            const currPt = getPoint(currentR, idx);
-            const targPt = getPoint(targetR, idx);
-            const labelPt = getPoint(maxRadius + 18, idx);
-
-            const angle = getAngle(idx);
-            const cosVal = Math.cos(angle);
-            const textAnchor = cosVal < -0.2 ? "end" : cosVal > 0.2 ? "start" : "middle";
-
-            const isHovered = hoveredIndex === idx;
-
-            return (
-              <g
-                key={d.name + idx}
-                className="cursor-pointer"
-                onMouseEnter={() => setHoveredIndex(idx)}
-                onMouseLeave={() => setHoveredIndex(null)}
-              >
-                {/* Target Level Dot */}
-                <circle
-                  cx={targPt.x}
-                  cy={targPt.y}
-                  r={isHovered ? 6 : 4}
-                  fill="#818cf8"
-                  stroke="#1e1b4b"
-                  strokeWidth="2"
-                  className="transition-all"
+          <svg viewBox="0 0 540 420" className="w-full h-auto overflow-visible select-none">
+            {/* Concentric Background Hexagonal Grids */}
+            {[1, 2, 3, 4, 5].map((level) => {
+              const levelPoints = data.map((_, i) => {
+                const { x, y } = getCoordinates(i, level);
+                return `${x},${y}`;
+              }).join(" ");
+              return (
+                <polygon
+                  key={level}
+                  points={levelPoints}
+                  fill="none"
+                  stroke={level === 5 ? "#cbd5e1" : "#e2e8f0"}
+                  strokeWidth={level === 5 ? "1.5" : "1"}
+                  strokeDasharray={level % 2 === 0 ? "3 3" : undefined}
                 />
+              );
+            })}
 
-                {/* Current Level Dot */}
-                <circle
-                  cx={currPt.x}
-                  cy={currPt.y}
-                  r={isHovered ? 7 : 5}
-                  fill="#10b981"
-                  stroke="#022c22"
-                  strokeWidth="2"
-                  className="transition-all shadow-lg"
+            {/* Radial Axis Rays */}
+            {data.map((_, i) => {
+              const outer = getCoordinates(i, maxVal);
+              const isFocused = hoveredIdx === i || selectedIdx === i;
+              return (
+                <line
+                  key={i}
+                  x1={center}
+                  y1={center}
+                  x2={outer.x}
+                  y2={outer.y}
+                  stroke={isFocused ? "#1e3a8a" : "#cbd5e1"}
+                  strokeWidth={isFocused ? "2" : "1"}
                 />
+              );
+            })}
 
-                {/* Outer Axis Domain Labels with Dynamic Alignment */}
-                <text
-                  x={labelPt.x}
-                  y={labelPt.y}
-                  textAnchor={textAnchor}
-                  dominantBaseline="central"
-                  className={`text-[11px] font-bold transition-all ${
-                    isHovered ? "fill-emerald-300 text-xs" : "fill-slate-300"
-                  }`}
+            {/* Target Benchmark Polygon */}
+            <polygon
+              points={targetPoints}
+              fill="rgba(30, 58, 138, 0.08)"
+              stroke="#1e3a8a"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+            />
+
+            {/* Current Level Polygon */}
+            <polygon
+              points={currentPoints}
+              fill="rgba(16, 185, 129, 0.18)"
+              stroke="#059669"
+              strokeWidth="2.5"
+            />
+
+            {/* Target Benchmark Vertices */}
+            {data.map((d, i) => {
+              const { x, y } = getCoordinates(i, d.targetLevel);
+              const isFocused = hoveredIdx === i || selectedIdx === i;
+              return (
+                <circle
+                  key={`target-${i}`}
+                  cx={x}
+                  cy={y}
+                  r={isFocused ? "5" : "3.5"}
+                  fill="#1e3a8a"
+                  stroke="#ffffff"
+                  strokeWidth="1.5"
+                />
+              );
+            })}
+
+            {/* Interactive Current Level Vertices (Clickable & Hoverable) */}
+            {data.map((d, i) => {
+              const { x, y } = getCoordinates(i, d.currentLevel);
+              const isHovered = hoveredIdx === i;
+              const isSelected = selectedIdx === i;
+              return (
+                <g
+                  key={`current-${i}`}
+                  onClick={() => setSelectedIdx(i)}
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  className="interactive-vertex cursor-pointer"
                 >
-                  {d.name.length > 18 ? `${d.name.slice(0, 16)}...` : d.name}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+                  {/* Focus Halo Ring on Hover/Selection */}
+                  {(isHovered || isSelected) && (
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r="11"
+                      fill="rgba(16, 185, 129, 0.15)"
+                      stroke="#059669"
+                      strokeWidth="1.5"
+                      strokeDasharray="2 2"
+                    />
+                  )}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={isSelected ? "6.5" : isHovered ? "5.5" : "4.5"}
+                    fill={isSelected ? "#047857" : "#059669"}
+                    stroke="#ffffff"
+                    strokeWidth="2"
+                  />
+                </g>
+              );
+            })}
 
-        {/* Hover Tooltip Overlay */}
-        {hoveredIndex !== null && validData[hoveredIndex] && (
-          <div className="absolute bottom-2 bg-slate-950 border border-slate-700 text-slate-100 p-2.5 rounded-xl text-xs shadow-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150 pointer-events-none z-20">
-            <div className="font-bold text-white flex items-center gap-1.5">
-              <span>{validData[hoveredIndex].name}</span>
-            </div>
-            <div className="flex items-center gap-3 text-[11px]">
-              <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-                Current: Level {validData[hoveredIndex].currentLevel}
+            {/* Axis Labels & Values (Expanded Padding - Never Cut Off) */}
+            {data.map((d, i) => {
+              const { x, y } = getLabelCoordinates(i);
+              const isHovered = hoveredIdx === i;
+              const isSelected = selectedIdx === i;
+              const isFocus = isHovered || isSelected;
+
+              // Text Anchoring based on angle position
+              const textAnchor = x < center - 20 ? "end" : x > center + 20 ? "start" : "middle";
+
+              return (
+                <g
+                  key={`label-${i}`}
+                  onClick={() => setSelectedIdx(i)}
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                  className="interactive-vertex cursor-pointer"
+                >
+                  <text
+                    x={x}
+                    y={y - 2}
+                    textAnchor={textAnchor}
+                    fill={isFocus ? "#1e3a8a" : "#0f172a"}
+                    fontSize="10"
+                    fontWeight={isFocus ? "900" : "700"}
+                    className="font-sans tracking-tight"
+                  >
+                    {d.name}
+                  </text>
+                  <text
+                    x={x}
+                    y={y + 11}
+                    textAnchor={textAnchor}
+                    fill={isFocus ? "#047857" : "#64748b"}
+                    fontSize="9"
+                    fontWeight="700"
+                  >
+                    L{d.currentLevel} / L{d.targetLevel} (Gap: {Math.max(0, d.targetLevel - d.currentLevel)})
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {/* NOTEBOOKLM INSPECTOR DRAWER / CARD (Active Selected Competency Domain) */}
+      {activeItem && (
+        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-extrabold text-blue-900 uppercase tracking-wider">
+                Competency Inspector (NotebookLM)
               </span>
-              <span className="text-purple-400 font-semibold flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-purple-500 inline-block" />
-                Target: Level {validData[hoveredIndex].targetLevel}
-              </span>
+              <h3 className="font-bold text-sm text-[#0f172a]">{activeItem.name}</h3>
             </div>
-            {validData[hoveredIndex].targetLevel > validData[hoveredIndex].currentLevel && (
-              <p className="text-[10px] text-rose-300 font-medium">
-                Gap: {validData[hoveredIndex].targetLevel - validData[hoveredIndex].currentLevel} Level(s) to reach standard
-              </p>
+
+            {activeItem.currentLevel >= activeItem.targetLevel ? (
+              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs font-bold">
+                Benchmark Met ✓
+              </Badge>
+            ) : (
+              <Badge className="bg-amber-100 text-amber-900 border-amber-300 text-xs font-bold">
+                -{activeItem.targetLevel - activeItem.currentLevel} Level Gap
+              </Badge>
             )}
           </div>
-        )}
-      </div>
 
-      {/* Legend & Summary Key */}
-      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-around gap-3 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-sm bg-emerald-500 border border-emerald-400 shadow-sm" />
-          <span className="font-bold text-slate-200">Current Verified Level</span>
-        </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+              <span>Proficiency Score</span>
+              <span>L{activeItem.currentLevel} / L{activeItem.targetLevel} ({Math.round((activeItem.currentLevel / activeItem.targetLevel) * 100)}%)</span>
+            </div>
+            <Progress value={Math.round((activeItem.currentLevel / activeItem.targetLevel) * 100)} className="h-2 bg-slate-200" />
+          </div>
 
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-sm bg-indigo-500 border border-indigo-400 border-dashed" />
-          <span className="font-bold text-slate-200">Target Role Standard ({targetRole})</span>
+          <div className="pt-2 flex items-center justify-between">
+            <p className="text-[11px] text-slate-500 font-medium">
+              Click any vertex above to inspect another competency domain.
+            </p>
+            <Link href="/learning">
+              <Button size="sm" className="bg-[#1e3a8a] hover:bg-blue-900 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-xs flex items-center gap-1.5">
+                Launch {activeItem.name} Module <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -6,20 +6,15 @@ import {
   BookOpen,
   Map,
   HelpCircle,
-  Sparkles,
   Flame,
-  Award,
-  Bell,
-  Menu,
-  X,
   User,
   LogOut,
-  ChevronDown,
-  LogIn
+  Menu,
+  X,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
 import { getUserStreak, getDisplayName } from "@/lib/api";
 
 export default function Navbar() {
@@ -60,126 +55,118 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white shadow-lg">
+    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand Logo */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <Award className="h-6 w-6 text-white" />
+          {/* System Brand Logo */}
+          <div className="flex items-center gap-6">
+            <Link href="/dashboard" className="flex items-center gap-3 group">
+              <div className="h-9 w-9 rounded-lg bg-[#1e3a8a] flex items-center justify-center text-white font-extrabold text-sm shadow-xs border border-blue-900">
+                KS
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg tracking-tight text-white flex items-center gap-1">
-                  Kaushal<span className="text-blue-400">Setu</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold uppercase tracking-wider ml-1">iGOT</span>
+                <span className="font-extrabold text-base text-[#0f172a] tracking-tight leading-none group-hover:text-[#1e3a8a] transition-colors">
+                  KaushalSetu
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">Competency & Career Bridge</span>
+                <span className="text-[10px] font-bold text-slate-500 leading-tight mt-0.5">
+                  Public Officer Competency Portal
+                </span>
               </div>
             </Link>
+
+            {/* Desktop Navigation Menu */}
+            <nav className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-6 ml-2">
+              {navItems.map((item) => {
+                const isActive = location === item.href || (item.href === "/quizzes" && location === "/assessments");
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                      isActive
+                        ? "bg-[#0f172a] text-white shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 ${isActive ? "text-blue-300" : "text-slate-500"}`} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-sm"
-                      : "text-slate-300 hover:text-white hover:bg-slate-800/60"
-                  }`}
-                >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-blue-400" : "text-slate-400"}`} />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Profile & Actions */}
+          {/* Right Header Actions */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Streak Counter Badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold shadow-inner">
-              <Flame className="h-4 w-4 text-amber-400 animate-pulse fill-amber-400/20" />
+            {/* Restrained Daily Streak Counter Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-xs">
+              <Flame className="h-4 w-4 text-amber-600 fill-amber-500/20" />
               <span>{streak} Day Streak</span>
             </div>
 
-            {/* Notifications */}
-            <button className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 relative transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-blue-500 ring-2 ring-slate-900" />
-            </button>
-
-            {/* User Dropdown / Login Button */}
+            {/* User Profile Dropdown / Sign-In State */}
             {isAuthenticated ? (
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-800 transition-colors border border-slate-800"
+                  className="flex items-center gap-2.5 p-1.5 rounded-xl bg-slate-50 border border-slate-200 text-left hover:bg-slate-100 hover:border-slate-300 transition-all"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white text-xs shadow">
+                  <div className="h-7 w-7 rounded-lg bg-[#1e3a8a] text-white flex items-center justify-center font-bold text-xs">
                     {initials}
                   </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-xs font-semibold text-white leading-tight">{displayName}</span>
-                    <span className="text-[10px] text-slate-400">{displayRole}</span>
+                  <div className="flex flex-col pr-1">
+                    <span className="text-xs font-bold text-[#0f172a] leading-none">{displayName}</span>
+                    <span className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate max-w-[120px]">
+                      {displayRole}
+                    </span>
                   </div>
-                  <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                  <ChevronDown className="h-3.5 w-3.5 text-slate-500 shrink-0 ml-1" />
                 </button>
 
+                {/* Dropdown Menu */}
                 {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-xl bg-slate-900 border border-slate-800 shadow-2xl py-1.5 z-50 text-sm">
-                    <div className="px-4 py-2 border-b border-slate-800">
-                      <p className="font-semibold text-white">{displayName}</p>
-                      <p className="text-xs text-slate-400">{displayEmail}</p>
+                  <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white border border-slate-200 shadow-xl p-2 z-50 space-y-1 animate-in fade-in duration-150 text-slate-900">
+                    <div className="p-3 bg-slate-50 rounded-lg space-y-1 border border-slate-200">
+                      <p className="text-xs font-bold text-slate-900">{displayName}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{displayEmail}</p>
+                      <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-900 text-[10px] mt-1 font-bold">
+                        {displayRole}
+                      </Badge>
                     </div>
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    >
-                      <User className="h-4 w-4 text-slate-400" /> Profile & Competencies
-                    </Link>
-                    <Link
-                      href="/roadmap"
-                      onClick={() => setProfileDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    >
-                      <Map className="h-4 w-4 text-slate-400" /> Career Gap Analysis
-                    </Link>
-                    <div className="border-t border-slate-800 my-1"></div>
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 w-full text-left font-medium"
-                    >
-                      <LogOut className="h-4 w-4" /> Sign Out
-                    </button>
+
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-rose-700 hover:bg-rose-50 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" /> Sign Out
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
               <Link href="/auth">
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 flex items-center gap-1.5">
-                  <LogIn className="h-3.5 w-3.5" /> Sign In
+                <Button className="bg-[#1e3a8a] hover:bg-blue-900 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-xs">
+                  Sign In
                 </Button>
               </Link>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-2">
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-semibold">
-              <Flame className="h-3.5 w-3.5 text-amber-400" />
-              <span>3</span>
+          {/* Mobile Menu Toggle Button */}
+          <div className="md:hidden flex items-center gap-2">
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
+              <Flame className="h-3.5 w-3.5 text-amber-600 fill-amber-500/20" />
+              <span>{streak}d</span>
             </div>
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-300 hover:bg-slate-800"
+              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -187,43 +174,52 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
-                  isActive ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800"
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {item.label}
-              </Link>
-            );
-          })}
+        <div className="md:hidden border-t border-slate-200 bg-white p-4 space-y-3 shadow-lg">
+          <nav className="flex flex-col space-y-1">
+            {navItems.map((item) => {
+              const isActive = location === item.href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-bold transition-colors ${
+                    isActive ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 text-blue-600" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
           {isAuthenticated ? (
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 w-full text-left mt-2 border-t border-slate-800 pt-3"
-            >
-              <LogOut className="h-5 w-5" />
-              Sign Out
-            </button>
+            <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-[#1e3a8a] text-white flex items-center justify-center font-bold text-xs">
+                  {initials}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900">{displayName}</p>
+                  <p className="text-[10px] text-slate-500">{displayRole}</p>
+                </div>
+              </div>
+              <Button onClick={handleSignOut} variant="ghost" size="sm" className="text-rose-700 font-bold text-xs">
+                Sign Out
+              </Button>
+            </div>
           ) : (
-            <Link
-              href="/auth"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white w-full mt-2"
-            >
-              <LogIn className="h-5 w-5" />
-              Sign In
-            </Link>
+            <div className="pt-2">
+              <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full bg-[#1e3a8a] hover:bg-blue-900 text-white font-bold text-xs py-2.5">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       )}

@@ -262,7 +262,7 @@ export default function Roadmap() {
             },
             {
               id: "node-data-cleaning",
-              name: isBacklogRecovered || isStreakBroken ? "Data Cleaning & Imputation" : "Data Cleaning & Imputation",
+              name: "Data Cleaning & Imputation",
               domain: "Technical",
               category: "topic",
               currentLevel: pythonData.current,
@@ -467,14 +467,14 @@ export default function Roadmap() {
   const renderPillBadge = (status: SkillNode["status"], isBacklogRecovery?: boolean) => {
     if (isBacklogRecovery || status === "backlog") {
       return (
-        <span className="px-2 py-0.5 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black tracking-wider flex items-center gap-1 border border-amber-300/40 shadow-sm shrink-0">
+        <span className="px-2 py-0.5 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black tracking-wider flex items-center gap-1 border border-amber-300/40 shadow-xs shrink-0">
           <AlertTriangle className="h-3 w-3 text-amber-400" /> BACKLOG (+15m)
         </span>
       );
     }
     if (status === "completed") {
       return (
-        <span className="h-5 w-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shrink-0">
+        <span className="h-5 w-5 rounded-full bg-indigo-700 text-white flex items-center justify-center text-[10px] font-bold shadow-xs shrink-0">
           ✓
         </span>
       );
@@ -486,11 +486,11 @@ export default function Roadmap() {
     }
     if (status === "locked") {
       return (
-        <Lock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+        <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
       );
     }
     return (
-      <span className="h-2.5 w-2.5 rounded-full bg-slate-500 inline-block shrink-0" />
+      <span className="h-2.5 w-2.5 rounded-full bg-slate-400 inline-block shrink-0" />
     );
   };
 
@@ -498,36 +498,36 @@ export default function Roadmap() {
     <Layout>
       <div className="space-y-8">
         {/* Header Banner with Streak Badge & Onboarding Target Info */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
           <div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[10px] font-bold">
+              <Badge className="bg-blue-50 text-blue-900 border-blue-200 text-[10px] font-bold">
                 Onboarding Target: {targetCompletion} ({totalWeeks} Weeks / {totalDays} Days)
               </Badge>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 mt-1">
-              <Map className="h-7 w-7 text-blue-400" />
+            <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a] tracking-tight flex items-center gap-2.5 mt-1">
+              <Map className="h-7 w-7 text-blue-800" />
               Career Gap Analysis & Skill Roadmap
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-600 text-sm mt-1 font-medium">
               Personalized AI learning pathway adapted to your current test scores, target role, and daily commitment.
             </p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Daily Streak Counter */}
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-xl shadow-sm">
-              <Flame className="h-4 w-4 text-amber-400 fill-amber-400/20" />
-              <span className="text-xs font-bold text-amber-300">{streakDays} Day Streak</span>
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3.5 py-1.5 rounded-xl shadow-xs">
+              <Flame className="h-4 w-4 text-amber-600 fill-amber-500/20" />
+              <span className="text-xs font-bold text-amber-900">{streakDays} Day Streak</span>
             </div>
 
             <Button
               onClick={() => setShowSetupForm(!showSetupForm)}
               variant="outline"
               size="sm"
-              className="border-slate-700 text-slate-200 hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold flex items-center gap-1.5"
             >
-              <Sliders className="h-3.5 w-3.5 text-blue-400" />
+              <Sliders className="h-3.5 w-3.5 text-blue-800" />
               {showSetupForm ? "Hide Setup Form" : "Reconfigure Settings"}
             </Button>
           </div>
@@ -535,23 +535,23 @@ export default function Roadmap() {
 
         {/* BROKEN STREAK & BACKLOG RECOVERY NOTIFICATION BANNER */}
         {isStreakBroken && !isBacklogRecovered && (
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-950/80 via-orange-950/60 to-slate-900 border-2 border-amber-500/60 shadow-2xl space-y-3 animate-in fade-in duration-300">
+          <div className="p-5 rounded-2xl bg-amber-50 border border-amber-300 shadow-sm space-y-3 animate-in fade-in duration-300">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-6 w-6 text-amber-700 shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-amber-900 flex items-center gap-2">
                     ⚠ Streak Broken ({missedDaysCount} Days Missed)!
                   </h3>
-                  <p className="text-xs text-slate-300 mt-0.5">
-                    You missed {missedDaysCount} scheduled days. Trigger Accelerated Backlog Catch-Up to highlight your backlog in <strong className="text-amber-400">Glowing Amber/Orange</strong> and recalculate your {totalDays}-day schedule without overload.
+                  <p className="text-xs text-amber-800 font-medium mt-0.5">
+                    You missed {missedDaysCount} scheduled days. Trigger Accelerated Backlog Catch-Up to highlight your backlog in <strong className="text-amber-950 font-black">Glowing Amber/Orange</strong> and recalculate your {totalDays}-day schedule without overload.
                   </p>
                 </div>
               </div>
 
               <Button
                 onClick={handleCoverBacklogASAP}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/25 shrink-0 flex items-center gap-2"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-xs shrink-0 flex items-center gap-2"
               >
                 <RefreshCw className="h-3.5 w-3.5" /> Cover Backlog ASAP & Rebalance
               </Button>
@@ -561,20 +561,20 @@ export default function Roadmap() {
 
         {/* INLINE SETUP FORM ("Build Your Personalized Roadmap") */}
         {(!isGenerated || showSetupForm) && (
-          <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-indigo-500/30 shadow-2xl space-y-5 animate-in fade-in duration-300">
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-5 animate-in fade-in duration-300">
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-indigo-400" />
+                <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-800" />
                   Build Your Personalized Roadmap
                 </h2>
-                <p className="text-xs text-slate-300 mt-1 max-w-2xl">
+                <p className="text-xs text-slate-600 mt-1 max-w-2xl font-medium">
                   Tell us where you are now and where you want to go. We'll create a learning roadmap based on your current skills, target role and available time.
                 </p>
               </div>
 
               {isGenerated && (
-                <button type="button" onClick={() => setShowSetupForm(false)} className="text-slate-400 hover:text-white p-1">
+                <button type="button" onClick={() => setShowSetupForm(false)} className="text-slate-400 hover:text-slate-700 p-1">
                   <X className="h-4 w-4" />
                 </button>
               )}
@@ -584,11 +584,11 @@ export default function Roadmap() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Target Role */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Target Role</label>
+                  <label className="text-xs font-bold text-slate-700">Target Role</label>
                   <select
                     value={targetRole}
                     onChange={(e) => setTargetRole(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 text-[#0f172a] rounded-xl text-xs p-3 focus:ring-2 focus:ring-blue-800 outline-none font-semibold"
                   >
                     <option value="Data Scientist">Data Scientist</option>
                     <option value="Statistical Officer">Statistical Officer</option>
@@ -601,11 +601,11 @@ export default function Roadmap() {
 
                 {/* Current Skill Level */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Current Skill Level</label>
+                  <label className="text-xs font-bold text-slate-700">Current Skill Level</label>
                   <select
                     value={currentSkillLevel}
                     onChange={(e) => setCurrentSkillLevel(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 text-[#0f172a] rounded-xl text-xs p-3 focus:ring-2 focus:ring-blue-800 outline-none font-semibold"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
@@ -615,20 +615,20 @@ export default function Roadmap() {
 
                 {/* Assessment Status */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Assessment Status</label>
-                  <div className="w-full bg-slate-950 border border-slate-800 text-emerald-400 rounded-xl text-xs p-3 font-semibold flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <label className="text-xs font-bold text-slate-700">Assessment Status</label>
+                  <div className="w-full bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs p-3 font-bold flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
                     {assessmentStatus} (Verified)
                   </div>
                 </div>
 
                 {/* Target Completion */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Target Completion</label>
+                  <label className="text-xs font-bold text-slate-700">Target Completion</label>
                   <select
                     value={targetCompletion}
                     onChange={(e) => setTargetCompletion(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 text-[#0f172a] rounded-xl text-xs p-3 focus:ring-2 focus:ring-blue-800 outline-none font-semibold"
                   >
                     <option value="1 Month">1 Month (30 Days)</option>
                     <option value="3 Months">3 Months (90 Days)</option>
@@ -639,11 +639,11 @@ export default function Roadmap() {
 
                 {/* Learning Time */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Learning Time</label>
+                  <label className="text-xs font-bold text-slate-700">Learning Time</label>
                   <select
                     value={learningTime}
                     onChange={(e) => setLearningTime(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 text-[#0f172a] rounded-xl text-xs p-3 focus:ring-2 focus:ring-blue-800 outline-none font-semibold"
                   >
                     <option value="15 min/day">15 min/day</option>
                     <option value="30 min/day">30 min/day</option>
@@ -655,11 +655,11 @@ export default function Roadmap() {
 
                 {/* Primary Goal */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300">Primary Goal</label>
+                  <label className="text-xs font-bold text-slate-700">Primary Goal</label>
                   <select
                     value={primaryGoal}
                     onChange={(e) => setPrimaryGoal(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 text-[#0f172a] rounded-xl text-xs p-3 focus:ring-2 focus:ring-blue-800 outline-none font-semibold"
                   >
                     <option value="Become Job Ready">Become Job Ready</option>
                     <option value="Mastery">Mastery</option>
@@ -671,9 +671,9 @@ export default function Roadmap() {
               <div className="pt-2 flex justify-end">
                 <Button
                   type="submit"
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2"
+                  className="bg-[#1e3a8a] hover:bg-blue-900 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-xs flex items-center gap-2"
                 >
-                  <Sparkles className="h-4 w-4" /> Generate My Roadmap
+                  <Target className="h-4 w-4" /> Generate My Roadmap
                 </Button>
               </div>
             </form>
@@ -682,45 +682,45 @@ export default function Roadmap() {
 
         {/* AFTER GENERATION SUMMARY BANNER */}
         {isGenerated && (
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 divide-x divide-slate-800/80">
+          <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 divide-x divide-slate-200">
               <div className="px-3">
-                <p className="text-[11px] text-slate-400 font-medium">Target Role</p>
-                <p className="text-sm font-bold text-white mt-0.5">{targetRole}</p>
+                <p className="text-[11px] text-slate-500 font-bold">Target Role</p>
+                <p className="text-sm font-black text-[#0f172a] mt-0.5">{targetRole}</p>
               </div>
 
               <div className="px-3">
-                <p className="text-[11px] text-slate-400 font-medium">Time Target</p>
-                <p className="text-sm font-bold text-indigo-400 mt-0.5">{targetCompletion} ({totalWeeks} Weeks)</p>
+                <p className="text-[11px] text-slate-500 font-bold">Time Target</p>
+                <p className="text-sm font-black text-blue-900 mt-0.5">{targetCompletion} ({totalWeeks} Weeks)</p>
               </div>
 
               <div className="px-3">
-                <p className="text-[11px] text-slate-400 font-medium">Current Readiness</p>
-                <p className="text-sm font-bold text-emerald-400 mt-0.5">{overallReadiness}%</p>
+                <p className="text-[11px] text-slate-500 font-bold">Current Readiness</p>
+                <p className="text-sm font-black text-emerald-700 mt-0.5">{overallReadiness}%</p>
               </div>
 
               <div className="px-3">
-                <p className="text-[11px] text-slate-400 font-medium">Estimated Learning</p>
-                <p className="text-sm font-bold text-amber-300 mt-0.5">{totalHours} hours</p>
+                <p className="text-[11px] text-slate-500 font-bold">Estimated Learning</p>
+                <p className="text-sm font-black text-amber-900 mt-0.5">{totalHours} hours</p>
               </div>
 
               <div className="px-3">
-                <p className="text-[11px] text-slate-400 font-medium">Daily Commitment</p>
-                <p className="text-sm font-bold text-purple-300 mt-0.5">{learningTime}</p>
+                <p className="text-[11px] text-slate-500 font-bold">Daily Commitment</p>
+                <p className="text-sm font-black text-indigo-900 mt-0.5">{learningTime}</p>
               </div>
             </div>
           </div>
         )}
 
         {/* DYNAMIC WEEKLY PROGRESSION BREAKDOWN ({totalWeeks} WEEKS) */}
-        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div className="p-6 rounded-2xl bg-white border border-slate-200 space-y-5 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-indigo-400" />
+              <h2 className="text-base font-bold text-[#0f172a] flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-800" />
                 Weekly Schedule Breakdown ({totalWeeks} Weeks / {totalDays} Days)
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">
                 Structured learning trajectory derived from your onboarding target timeline.
               </p>
             </div>
@@ -730,9 +730,9 @@ export default function Roadmap() {
               disabled={todayCompleted}
               className={`${
                 todayCompleted
-                  ? "bg-emerald-600 text-white cursor-default"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white"
-              } font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 shadow-md`}
+                  ? "bg-emerald-700 text-white cursor-default"
+                  : "bg-[#1e3a8a] hover:bg-blue-900 text-white"
+              } font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 shadow-xs`}
             >
               <CheckSquare className="h-4 w-4" />
               {todayCompleted ? "Today's Topic Completed! ✓" : "Complete Today's Topic (Day 12)"}
@@ -751,8 +751,8 @@ export default function Roadmap() {
                   onClick={() => setActiveWeek(weekNum)}
                   className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all shrink-0 border ${
                     isActive
-                      ? "bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30"
-                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                      ? "bg-[#0f172a] border-slate-900 text-white shadow-xs"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
                   Week {weekNum}
@@ -762,10 +762,10 @@ export default function Roadmap() {
           </div>
 
           {/* ACTIVE WEEKLY FOCUS SUMMARY */}
-          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="space-y-1">
-              <span className="text-indigo-400 font-bold">Week {activeWeek} Focus:</span>
-              <p className="text-slate-200 font-semibold">
+              <span className="text-blue-900 font-extrabold">Week {activeWeek} Focus:</span>
+              <p className="text-slate-900 font-bold">
                 {activeWeek === 1
                   ? "Python Foundations, Pandas CSV Dataframes & Matrix Ops"
                   : activeWeek === 2
@@ -778,7 +778,7 @@ export default function Roadmap() {
               </p>
             </div>
 
-            <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-[10px] font-bold self-start sm:self-auto">
+            <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-900 text-[10px] font-bold self-start sm:self-auto">
               Days {(activeWeek - 1) * 7 + 1}–{activeWeek * 7} Scheduled
             </Badge>
           </div>
@@ -786,15 +786,15 @@ export default function Roadmap() {
 
         {/* Dynamic Adaptive Recalculation Notice Banner */}
         {recalculatedNotice && (
-          <div className="p-3.5 rounded-xl bg-indigo-950/60 border border-indigo-500/40 text-xs text-indigo-200 font-semibold flex items-center justify-between gap-2 animate-in fade-in duration-200">
+          <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-950 font-bold flex items-center justify-between gap-2 animate-in fade-in duration-200">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-indigo-400 shrink-0" />
+              <Target className="h-4 w-4 text-blue-800 shrink-0" />
               <span>{recalculatedNotice}</span>
             </div>
             <button
               type="button"
               onClick={() => setRecalculatedNotice(null)}
-              className="text-indigo-400 hover:text-white text-[11px] font-bold underline shrink-0"
+              className="text-blue-900 hover:underline text-[11px] font-black shrink-0"
             >
               Dismiss
             </button>
@@ -813,24 +813,24 @@ export default function Roadmap() {
 
         {/* NOTEBOOKLM-STYLE INTERACTIVE MIND MAP CANVAS */}
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <Layers className="h-5 w-5 text-indigo-400" />
-                NotebookLM Interactive Mind Map ({targetRole})
+              <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                <Layers className="h-5 w-5 text-blue-800" />
+                Interactive Competency Mind Map ({targetRole})
               </h2>
-              <p className="text-xs text-slate-400">
-                Drag to pan, scroll/click to zoom. <strong className="text-amber-400">Rebalanced Backlog Catch-Up nodes are distinctly highlighted in Glowing Amber/Orange</strong>.
+              <p className="text-xs text-slate-500 font-medium">
+                Drag to pan, scroll/click to zoom. <strong className="text-amber-800">Rebalanced Backlog Catch-Up nodes are distinctly highlighted in Glowing Amber/Orange</strong>.
               </p>
             </div>
 
             {/* FLOATING PAN & ZOOM CONTROLS */}
-            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1.5 rounded-xl shadow-lg self-start sm:self-auto">
+            <div className="flex items-center gap-1 bg-white border border-slate-200 p-1.5 rounded-xl shadow-xs self-start sm:self-auto">
               <Button
                 onClick={handleZoomIn}
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                className="h-8 w-8 p-0 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-bold"
                 title="Zoom In"
               >
                 <ZoomIn className="h-4 w-4" />
@@ -839,7 +839,7 @@ export default function Roadmap() {
                 onClick={handleZoomOut}
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                className="h-8 w-8 p-0 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg font-bold"
                 title="Zoom Out"
               >
                 <ZoomOut className="h-4 w-4" />
@@ -848,12 +848,12 @@ export default function Roadmap() {
                 onClick={handleResetZoom}
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 text-[11px] font-bold text-indigo-400 hover:bg-indigo-950/40 rounded-lg flex items-center gap-1"
+                className="h-8 px-2 text-[11px] font-bold text-blue-900 hover:bg-blue-50 rounded-lg flex items-center gap-1"
                 title="Fit to View"
               >
                 <Maximize2 className="h-3.5 w-3.5" /> Fit
               </Button>
-              <span className="text-[10px] font-extrabold text-slate-400 px-2 border-l border-slate-800">
+              <span className="text-[10px] font-extrabold text-slate-600 px-2 border-l border-slate-200">
                 {Math.round(zoomScale * 100)}%
               </span>
             </div>
@@ -866,7 +866,7 @@ export default function Roadmap() {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            className={`p-8 rounded-3xl bg-slate-950 border border-slate-800 min-h-[560px] overflow-hidden select-none shadow-2xl relative cursor-grab ${
+            className={`p-8 rounded-3xl bg-white border border-slate-200 min-h-[560px] overflow-hidden select-none shadow-xs relative cursor-grab ${
               isDragging ? "cursor-grabbing" : ""
             }`}
           >
@@ -887,14 +887,14 @@ export default function Roadmap() {
                       onClick={() => setSelectedNode(rootNode)}
                       onMouseEnter={() => setHoveredNodeId(rootNode.id)}
                       onMouseLeave={() => setHoveredNodeId(null)}
-                      className="interactive-node cursor-pointer p-4 rounded-2xl bg-indigo-600 border-2 border-indigo-400 shadow-2xl shadow-indigo-600/40 text-center min-w-[300px] hover:bg-indigo-500 transition-all hover:scale-105"
+                      className="interactive-node cursor-pointer p-4 rounded-2xl bg-[#1e1b4b] border-2 border-indigo-500 shadow-md text-center min-w-[300px] hover:bg-indigo-950 transition-all hover:scale-105"
                     >
                       <div className="flex items-center justify-center gap-2">
                         <Target className="h-5 w-5 text-white" />
                         <span className="font-black text-white text-lg tracking-wider">{rootNode.name}</span>
                       </div>
                       <div className="flex items-center justify-center gap-2 mt-2">
-                        <span className="bg-indigo-950/70 text-indigo-200 border border-indigo-400/40 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                        <span className="bg-indigo-950 text-indigo-200 border border-indigo-400 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
                           {overallReadiness}% Role Readiness
                         </span>
                       </div>
@@ -909,15 +909,15 @@ export default function Roadmap() {
                         y1="0"
                         x2="50%"
                         y2="24"
-                        stroke={hoveredNodeId ? "#818cf8" : "#6366f1"}
+                        stroke={hoveredNodeId ? "#1e3a8a" : "#475569"}
                         strokeWidth={hoveredNodeId ? "3.5" : "2.5"}
                         className="transition-all"
                       />
-                      <line x1="12.5%" y1="24" x2="87.5%" y2="24" stroke="#6366f1" strokeWidth="2.5" />
-                      <line x1="12.5%" y1="24" x2="12.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
-                      <line x1="37.5%" y1="24" x2="37.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
-                      <line x1="62.5%" y1="24" x2="62.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
-                      <line x1="87.5%" y1="24" x2="87.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
+                      <line x1="12.5%" y1="24" x2="87.5%" y2="24" stroke="#475569" strokeWidth="2.5" />
+                      <line x1="12.5%" y1="24" x2="12.5%" y2="48" stroke="#475569" strokeWidth="2.5" />
+                      <line x1="37.5%" y1="24" x2="37.5%" y2="48" stroke="#475569" strokeWidth="2.5" />
+                      <line x1="62.5%" y1="24" x2="62.5%" y2="48" stroke="#475569" strokeWidth="2.5" />
+                      <line x1="87.5%" y1="24" x2="87.5%" y2="48" stroke="#475569" strokeWidth="2.5" />
                     </svg>
                   </div>
 
@@ -932,7 +932,7 @@ export default function Roadmap() {
                             onClick={() => setSelectedNode(compNode)}
                             onMouseEnter={() => setHoveredNodeId(compNode.id)}
                             onMouseLeave={() => setHoveredNodeId(null)}
-                            className="interactive-node cursor-pointer w-full p-3 rounded-xl bg-indigo-700 border-2 border-indigo-500 shadow-lg hover:bg-indigo-600 transition-colors relative group"
+                            className="interactive-node cursor-pointer w-full p-3 rounded-xl bg-indigo-900 border-2 border-indigo-600 shadow-xs hover:bg-indigo-800 transition-colors relative group"
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-extrabold text-white text-xs tracking-wider uppercase block">
@@ -943,21 +943,21 @@ export default function Roadmap() {
                               <button
                                 type="button"
                                 onClick={(e) => toggleNodeCollapse(compNode.id, e)}
-                                className="p-1 rounded-md bg-indigo-900/80 hover:bg-indigo-950 text-indigo-200 text-[10px] font-bold flex items-center gap-1 border border-indigo-400/40"
+                                className="p-1 rounded-md bg-indigo-950 text-indigo-200 text-[10px] font-bold flex items-center gap-1 border border-indigo-400"
                                 title={isCollapsed ? "Expand Branch" : "Collapse Branch"}
                               >
                                 {isCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
                               </button>
                             </div>
 
-                            <span className="text-[10px] text-indigo-200 font-semibold block mt-1">
+                            <span className="text-[10px] text-indigo-200 font-bold block mt-1">
                               Phase {compNode.phase} • Level {compNode.currentLevel}/{compNode.requiredLevel}
                             </span>
                           </div>
 
                           {/* SUB-TOPIC GROUP CONTAINER WITH YELLOW/GOLD AND DISTINCT AMBER/ORANGE BACKLOG PILLS */}
                           {!isCollapsed ? (
-                            <div className="w-full p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-inner animate-in fade-in zoom-in-95 duration-200">
+                            <div className="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 shadow-inner animate-in fade-in zoom-in-95 duration-200">
                               {compNode.children?.map((subNode) => {
                                 const isBacklogNode = subNode.isBacklogRecovery || subNode.status === "backlog";
                                 return (
@@ -966,14 +966,14 @@ export default function Roadmap() {
                                     onClick={() => setSelectedNode(subNode)}
                                     onMouseEnter={() => setHoveredNodeId(subNode.id)}
                                     onMouseLeave={() => setHoveredNodeId(null)}
-                                    className={`interactive-node cursor-pointer p-3 rounded-xl border-2 transition-all shadow-md flex items-center justify-between gap-2 hover:scale-[1.02] ${
+                                    className={`interactive-node cursor-pointer p-3 rounded-xl border-2 transition-all shadow-xs flex items-center justify-between gap-2 hover:scale-[1.02] ${
                                       isBacklogNode
-                                        ? "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 border-amber-300 text-slate-950 font-black shadow-xl shadow-amber-500/30 animate-pulse hover:from-amber-400 hover:to-orange-400"
+                                        ? "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 border-amber-500 text-slate-950 font-black shadow-md animate-pulse hover:from-amber-300 hover:to-orange-300"
                                         : subNode.status === "completed"
-                                        ? "bg-amber-300 border-amber-400 text-slate-950 font-extrabold hover:bg-amber-200"
+                                        ? "bg-amber-200 border-amber-400 text-slate-950 font-black hover:bg-amber-100"
                                         : subNode.status === "in_progress"
-                                        ? "bg-blue-600 border-blue-400 text-white font-bold hover:bg-blue-500"
-                                        : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750"
+                                        ? "bg-blue-700 border-blue-900 text-white font-extrabold hover:bg-blue-600"
+                                        : "bg-white border-slate-300 text-slate-800 hover:bg-slate-100"
                                     }`}
                                   >
                                     <span className="font-extrabold text-xs tracking-tight line-clamp-1">
@@ -987,7 +987,7 @@ export default function Roadmap() {
                           ) : (
                             <div
                               onClick={(e) => toggleNodeCollapse(compNode.id, e)}
-                              className="interactive-node cursor-pointer p-2 px-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-bold text-slate-400 hover:text-slate-200 flex items-center gap-1.5"
+                              className="interactive-node cursor-pointer p-2 px-3 rounded-xl bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1.5"
                             >
                               <span>+ {compNode.children?.length || 0} Topics Collapsed</span>
                             </div>
@@ -1004,16 +1004,16 @@ export default function Roadmap() {
 
         {/* NODE CLICK INTERACTION SIDE DRAWER WITH BACKLOG ALERT CALLOUT */}
         {selectedNode && (
-          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-slate-900 border-l border-slate-800 shadow-2xl p-6 z-50 space-y-5 animate-in slide-in-from-right duration-250 overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white border-l border-slate-200 shadow-2xl p-6 z-50 space-y-5 animate-in slide-in-from-right duration-250 overflow-y-auto text-[#0f172a]">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="space-y-1">
-                <Badge className="bg-slate-800 text-slate-300 text-[10px]">{selectedNode.domain}</Badge>
-                <h3 className="font-bold text-white text-lg">{selectedNode.name}</h3>
+                <Badge className="bg-slate-100 text-slate-700 text-[10px] font-bold">{selectedNode.domain}</Badge>
+                <h3 className="font-extrabold text-[#0f172a] text-lg">{selectedNode.name}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedNode(null)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg"
+                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1021,64 +1021,64 @@ export default function Roadmap() {
 
             {/* DISTINCT BACKLOG RECOVERY WARNING CALLOUT */}
             {(selectedNode.isBacklogRecovery || selectedNode.status === "backlog") && (
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/60 text-xs text-amber-200 space-y-1 animate-in fade-in duration-200">
-                <div className="flex items-center gap-2 font-black text-amber-300">
-                  <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+              <div className="p-3.5 rounded-xl bg-amber-50 border-2 border-amber-400 text-xs text-amber-950 space-y-1 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 font-black text-amber-900">
+                  <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0" />
                   <span>⚠ ACCELERATED BACKLOG CATCH-UP TASK</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-snug">
+                <p className="text-[11px] text-amber-900 font-medium leading-snug">
                   This topic was rebalanced into your schedule to cover 4 missed learning days. Complete this module ASAP to restore your full streak momentum in 5 days!
                 </p>
               </div>
             )}
 
             {/* Node Status & Level Specs */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400 font-semibold">Node Status</span>
-                <Badge className={`${selectedNode.isBacklogRecovery || selectedNode.status === "backlog" ? "bg-amber-400 text-slate-950 font-black" : "bg-indigo-500/20 text-indigo-300"} text-xs px-2.5 py-0.5`}>
+                <span className="text-slate-600 font-bold">Node Status</span>
+                <Badge className={`${selectedNode.isBacklogRecovery || selectedNode.status === "backlog" ? "bg-amber-400 text-slate-950 font-black" : "bg-blue-100 text-blue-900 font-bold"} text-xs px-2.5 py-0.5`}>
                   {selectedNode.isBacklogRecovery ? "BACKLOG CATCH-UP" : selectedNode.status.toUpperCase()}
                 </Badge>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-800/80">
+              <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-200">
                 <div>
-                  <p className="text-[10px] text-slate-400">Current</p>
-                  <p className="text-sm font-bold text-white">{selectedNode.currentLevel} / 5</p>
+                  <p className="text-[10px] text-slate-500 font-bold">Current</p>
+                  <p className="text-sm font-black text-[#0f172a]">{selectedNode.currentLevel} / 5</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400">Required</p>
-                  <p className="text-sm font-bold text-indigo-400">{selectedNode.requiredLevel} / 5</p>
+                  <p className="text-[10px] text-slate-500 font-bold">Required</p>
+                  <p className="text-sm font-black text-blue-900">{selectedNode.requiredLevel} / 5</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400">Gap</p>
-                  <p className="text-sm font-bold text-rose-400">-{selectedNode.gap}</p>
+                  <p className="text-[10px] text-slate-500 font-bold">Gap</p>
+                  <p className="text-sm font-black text-rose-700">-{selectedNode.gap}</p>
                 </div>
               </div>
             </div>
 
             {/* Role Justification */}
             <div className="space-y-1.5">
-              <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Info className="h-4 w-4 text-blue-400" /> Why this is required:
+              <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Info className="h-4 w-4 text-blue-800" /> Why this is required:
               </p>
-              <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+              <p className="text-xs text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200 font-medium">
                 "{selectedNode.whyRequired}"
               </p>
             </div>
 
             {/* Recommended Learning Module */}
-            <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
               <div className="flex items-center justify-between">
-                <Badge className="bg-indigo-500/20 text-indigo-300 text-[10px]">
+                <Badge className="bg-blue-50 text-blue-900 text-[10px] font-bold border border-blue-200">
                   {selectedNode.recommendedCourse.provider}
                 </Badge>
-                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                <span className="text-[10px] text-slate-500 flex items-center gap-1 font-semibold">
                   <Clock className="h-3 w-3" /> {selectedNode.recommendedCourse.durationMinutes} mins
                 </span>
               </div>
 
-              <h4 className="font-semibold text-xs text-white leading-snug">
+              <h4 className="font-bold text-xs text-[#0f172a] leading-snug">
                 {selectedNode.recommendedCourse.title}
               </h4>
 
@@ -1086,9 +1086,9 @@ export default function Roadmap() {
                 href={selectedNode.recommendedCourse.courseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs py-2.5 rounded-lg shadow-lg shadow-amber-500/20 transition-all"
+                className="w-full inline-flex items-center justify-center gap-2 bg-[#1e3a8a] hover:bg-blue-900 text-white font-bold text-xs py-2.5 rounded-lg transition-all shadow-xs"
               >
-                Start Backlog Catch-Up <ExternalLink className="h-3.5 w-3.5" />
+                Start Learning Module <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </div>
           </div>
