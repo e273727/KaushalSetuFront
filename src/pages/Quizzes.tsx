@@ -376,21 +376,36 @@ export default function Quizzes() {
 
               {/* Options */}
               <div className="space-y-3 pt-2">
-                {quizQuestions[currentIdx]?.options.map((opt: any) => {
+                {quizQuestions[currentIdx]?.options.map((opt: any, optIdx: number) => {
                   const isSelected = userAnswers[quizQuestions[currentIdx].id] === opt.id;
+                  const optionText = opt.optionText || opt.text || "";
+                  const letter = String.fromCharCode(65 + optIdx);
                   return (
                     <button
                       key={opt.id}
                       type="button"
                       onClick={() => handleSelectOption(quizQuestions[currentIdx].id, opt.id)}
-                      className={`w-full p-4 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between gap-3 ${
+                      className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between gap-3 ${
                         isSelected
                           ? "bg-[#0f172a] border-slate-900 text-white shadow-xs"
-                          : "bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100 hover:border-slate-300"
+                          : "bg-slate-50 border-slate-200 text-[#0f172a] hover:bg-blue-50/70 hover:border-blue-300"
                       }`}
                     >
-                      <span>{opt.text}</span>
-                      {isSelected && <CheckCircle2 className="h-4 w-4 text-blue-300 shrink-0" />}
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`h-7 w-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0 border ${
+                            isSelected
+                              ? "bg-blue-600 border-blue-500 text-white"
+                              : "bg-white border-slate-300 text-slate-700"
+                          }`}
+                        >
+                          {letter}
+                        </span>
+                        <span className={`text-sm font-semibold leading-normal ${isSelected ? "text-white" : "text-[#0f172a]"}`}>
+                          {optionText}
+                        </span>
+                      </div>
+                      {isSelected && <CheckCircle2 className="h-5 w-5 text-blue-300 shrink-0" />}
                     </button>
                   );
                 })}
@@ -529,22 +544,27 @@ export default function Quizzes() {
                       <p className="font-bold text-sm text-[#0f172a]">{q.questionText}</p>
 
                       <div className="space-y-2 pt-1">
-                        {q.options.map((opt: any) => {
+                        {q.options.map((opt: any, optIdx: number) => {
                           const isUserChoice = chosenOptId === opt.id;
                           const isTrueAnswer = Boolean(opt.isCorrect);
+                          const optionText = opt.optionText || opt.text || "";
+                          const letter = String.fromCharCode(65 + optIdx);
 
                           return (
                             <div
                               key={opt.id}
-                              className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between gap-2 ${
+                              className={`p-3.5 rounded-xl border text-xs font-bold flex items-center justify-between gap-3 ${
                                 isTrueAnswer
                                   ? "bg-emerald-50 border-emerald-300 text-emerald-950 font-black"
                                   : isUserChoice
                                   ? "bg-rose-50 border-rose-300 text-rose-950"
-                                  : "bg-slate-50 border-slate-200 text-slate-700"
+                                  : "bg-slate-50 border-slate-200 text-slate-800"
                               }`}
                             >
-                              <span>{opt.text}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="font-extrabold text-slate-500">{letter}.</span>
+                                <span className="text-xs font-semibold">{optionText}</span>
+                              </div>
                               <div className="flex items-center gap-2 shrink-0">
                                 {isTrueAnswer && (
                                   <span className="px-2 py-0.5 rounded bg-emerald-700 text-white text-[10px] font-bold">
