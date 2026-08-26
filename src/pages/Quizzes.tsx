@@ -63,10 +63,12 @@ export default function Quizzes() {
   const [domainBreakdown, setDomainBreakdown] = useState<Record<string, { total: number; correct: number }>>({});
   const [competenciesUpdated, setCompetenciesUpdated] = useState(false);
 
-  // START DIAGNOSTIC ASSESSMENT
-  const startAssessmentQuiz = () => {
+  // START DIAGNOSTIC ASSESSMENT / AI QUIZ
+  const startAssessmentQuiz = (overrideCount?: number | React.SyntheticEvent) => {
+    const targetCount = typeof overrideCount === "number" ? overrideCount : questionCount;
+    const isAiCustom = typeof overrideCount === "number";
     let sourcePool = [...ASSESSMENT_MCQ_BANK];
-    if (selectedDomain !== "All Domains") {
+    if (selectedDomain !== "All Domains" && !isAiCustom) {
       sourcePool = sourcePool.filter((q) => ((q as any).domain || "").toLowerCase() === selectedDomain.toLowerCase());
     }
 
@@ -76,10 +78,10 @@ export default function Quizzes() {
 
     // Dynamic Expansion: duplicate/cycle pool if requested count > available questions
     let finalPool: any[] = [];
-    while (finalPool.length < questionCount) {
+    while (finalPool.length < targetCount) {
       finalPool = [...finalPool, ...shuffleArray([...sourcePool])];
     }
-    finalPool = finalPool.slice(0, questionCount);
+    finalPool = finalPool.slice(0, targetCount);
 
     // Shuffle questions and options with explicit unique IDs
     const preparedQuestions = finalPool.map((q, qIdx) => {
@@ -90,6 +92,7 @@ export default function Quizzes() {
       return {
         ...q,
         id: `q-${qIdx}-${Date.now()}`,
+        domain: isAiCustom ? genTopic : (q.domain || "General"),
         options: shuffledOpts,
       };
     });
@@ -110,8 +113,8 @@ export default function Quizzes() {
     setGenGenerating(true);
     setTimeout(() => {
       setGenGenerating(false);
-      startAssessmentQuiz();
-    }, 1200);
+      startAssessmentQuiz(genCount);
+    }, 800);
   };
 
   // ANSWER SELECTION HANDLER
