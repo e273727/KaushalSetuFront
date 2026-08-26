@@ -242,11 +242,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const accountInfo = registeredAccounts[cleanEmail];
+    const derivedName = cleanEmail.includes("admin")
+      ? "System Administrator"
+      : cleanEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
     const authUser: AuthUser = {
       id: `u-${Date.now()}`,
       email: cleanEmail,
       role: cleanEmail.includes("admin") ? "admin" : "learner",
-      fullName: accountInfo?.fullName || (cleanEmail.includes("admin") ? "System Administrator" : "Rohit Sharma"),
+      fullName: accountInfo?.fullName || derivedName,
       department: accountInfo?.department || "National Sample Survey Office (NSSO)",
       currentJobRole: accountInfo?.currentJobRole || "Statistical Officer",
     };

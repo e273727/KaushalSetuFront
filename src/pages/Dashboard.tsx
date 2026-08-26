@@ -9,7 +9,8 @@ import {
   UserProfile,
   CompetencyItem,
   CourseItem,
-  getUserGapCompetencies
+  getUserGapCompetencies,
+  getDisplayName
 } from "@/lib/api";
 import {
   Award,
@@ -37,7 +38,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile>(MOCK_PROFILE);
+  const [profile, setProfile] = useState<UserProfile>(() => ({
+    ...MOCK_PROFILE,
+    fullName: getDisplayName(user),
+    email: user?.email || MOCK_PROFILE.email,
+  }));
   const [competencies, setCompetencies] = useState<CompetencyItem[]>(() => getUserGapCompetencies(user));
   const [courses, setCourses] = useState<CourseItem[]>(MOCK_COURSES);
   const [loading, setLoading] = useState(false);
@@ -52,7 +57,17 @@ export default function Dashboard() {
       const userComps = getUserGapCompetencies(user);
       setCompetencies(userComps);
 
-      if (userProf) setProfile(userProf);
+      const resolvedName = getDisplayName(user);
+      if (userProf) {
+        setProfile({
+          ...userProf,
+          fullName: resolvedName,
+          email: user?.email || userProf.email,
+        });
+      } else {
+        setProfile((prev) => ({ ...prev, fullName: resolvedName }));
+      }
+
       if (crses) setCourses(crses);
       setLoading(false);
     }

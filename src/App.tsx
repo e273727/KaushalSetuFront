@@ -57,7 +57,8 @@ function Router() {
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/learning" component={() => <ProtectedRoute component={Learning} />} />
       <Route path="/quizzes" component={() => <ProtectedRoute component={Quizzes} />} />
-      <Route path="/quiz-generator" component={() => <ProtectedRoute component={QuizGenerator} />} />
+      <Route path="/assessments" component={() => <ProtectedRoute component={Quizzes} />} />
+      <Route path="/quiz-generator" component={() => <ProtectedRoute component={Quizzes} />} />
       <Route path="/roadmap" component={() => <ProtectedRoute component={Roadmap} />} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

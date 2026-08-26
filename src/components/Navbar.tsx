@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { getUserStreak } from "@/lib/api";
+import { getUserStreak, getDisplayName } from "@/lib/api";
 
 export default function Navbar() {
   const [location, setLocation] = useLocation();
@@ -41,12 +41,11 @@ export default function Navbar() {
     { href: "/learning", label: "Courses & Skills", icon: BookOpen },
     { href: "/roadmap", label: "Career Roadmap", icon: Map },
     { href: "/quizzes", label: "Assessments", icon: HelpCircle },
-    { href: "/quiz-generator", label: "AI Quiz Builder", icon: Sparkles },
   ];
 
-  const displayName = user?.fullName || user?.profile?.fullName || "Rohit Sharma";
+  const displayName = getDisplayName(user);
   const displayRole = user?.currentJobRole || user?.profile?.currentJobRole || "Statistical Officer";
-  const displayEmail = user?.email || "officer@kaushalsetu.gov.in";
+  const displayEmail = user?.email || "";
   const initials = displayName
     .split(" ")
     .map((n) => n[0])
