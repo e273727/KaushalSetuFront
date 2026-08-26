@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -20,11 +20,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+import { getUserStreak } from "@/lib/api";
+
 export default function Navbar() {
   const [location, setLocation] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [streak, setStreak] = useState(() => getUserStreak(user));
+
+  useEffect(() => {
+    setStreak(getUserStreak(user));
+    const handleUpdate = () => setStreak(getUserStreak(user));
+    window.addEventListener("kaushalsetu_streak_updated", handleUpdate);
+    return () => window.removeEventListener("kaushalsetu_streak_updated", handleUpdate);
+  }, [user]);
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -97,7 +107,7 @@ export default function Navbar() {
             {/* Streak Counter Badge */}
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold shadow-inner">
               <Flame className="h-4 w-4 text-amber-400 animate-pulse fill-amber-400/20" />
-              <span>3 Day Streak</span>
+              <span>{streak} Day Streak</span>
             </div>
 
             {/* Notifications */}

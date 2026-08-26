@@ -12,16 +12,18 @@ import Home from "@/pages/Home";
 import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AuthProvider, useAuth, checkIsOnboarded } from "./contexts/AuthContext";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { isAuthenticated, isOnboarded } = useAuth();
+  const { isAuthenticated, isOnboarded, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Redirect to="/auth" />;
   }
 
-  if (!isOnboarded) {
+  const isActuallyOnboarded = isOnboarded || checkIsOnboarded(user);
+
+  if (!isActuallyOnboarded) {
     return <Redirect to="/onboarding" />;
   }
 
@@ -29,13 +31,15 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 }
 
 function RootRoute() {
-  const { isAuthenticated, isOnboarded } = useAuth();
+  const { isAuthenticated, isOnboarded, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Redirect to="/auth" />;
   }
 
-  if (!isOnboarded) {
+  const isActuallyOnboarded = isOnboarded || checkIsOnboarded(user);
+
+  if (!isActuallyOnboarded) {
     return <Redirect to="/onboarding" />;
   }
 

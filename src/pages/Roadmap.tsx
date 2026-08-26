@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Layout from "@/components/Layout";
-import { MOCK_COMPETENCIES, CompetencyItem } from "@/lib/api";
+import { MOCK_COMPETENCIES, CompetencyItem, getUserGapCompetencies, fetchApi, UserProfile, MOCK_PROFILE, getUserStreak, setUserStreak } from "@/lib/api";
 import {
   Map,
   Target,
@@ -13,380 +13,1086 @@ import {
   RefreshCw,
   Clock,
   Zap,
-  RotateCcw
+  RotateCcw,
+  BookOpen,
+  Lock,
+  ExternalLink,
+  Layers,
+  ArrowRight,
+  Sliders,
+  Check,
+  Info,
+  X,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Calendar,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import HexagonalStatsGraph from "@/components/HexagonalStatsGraph";
+import { useAuth } from "@/contexts/AuthContext";
 
-export interface RebuiltMilestone {
+export interface SkillNode {
   id: string;
-  title: string;
+  name: string;
   domain: string;
+  category: "root" | "competency" | "skill" | "topic" | "module";
   currentLevel: number;
   requiredLevel: number;
-  isBacklogRecovery: boolean;
-  recoveryNote?: string;
-  estimatedHours?: number;
+  gap: number;
+  status: "completed" | "in_progress" | "upcoming" | "backlog" | "locked";
+  phase: number;
+  whyRequired: string;
+  isBacklogRecovery?: boolean;
+  recommendedCourse: {
+    title: string;
+    provider: string;
+    durationMinutes: number;
+    courseUrl: string;
+  };
+  children?: SkillNode[];
 }
 
 export default function Roadmap() {
-  const [selectedRole, setSelectedRole] = useState("Statistical Officer");
+  const { user } = useAuth();
 
-  // Streak Break & Backlog Recovery State
-  const [isBrokenStreak, setIsBrokenStreak] = useState(true);
-  const [brokenDays, setBrokenDays] = useState(4);
-  const [isRebuilding, setIsRebuilding] = useState(false);
-  const [rebuiltNotice, setRebuiltNotice] = useState(false);
-  const [customMilestones, setCustomMilestones] = useState<RebuiltMilestone[] | null>(null);
+  // Unified Competencies from Assessment
+  const [userCompetencies, setUserCompetencies] = useState<CompetencyItem[]>(() => getUserGapCompetencies(user));
 
-  const roles = [
-    "Statistical Officer",
-    "Data Analyst",
-    "Survey Officer",
-    "Data Processing Officer"
+  // Form & Onboarding Target Timeline State
+  const [isGenerated, setIsGenerated] = useState(true);
+  const [showSetupForm, setShowSetupForm] = useState(false);
+  const [targetRole, setTargetRole] = useState("Data Scientist");
+  const [currentSkillLevel, setCurrentSkillLevel] = useState("Intermediate");
+  const [assessmentStatus, setAssessmentStatus] = useState("Assessment Completed");
+  const [targetCompletion, setTargetCompletion] = useState("3 Months");
+  const [learningTime, setLearningTime] = useState("1 hour/day");
+  const [primaryGoal, setPrimaryGoal] = useState("Become Job Ready");
+
+  // Streak & Backlog Recovery State
+  const [streakDays, setStreakDays] = useState(() => getUserStreak(user));
+  const [isStreakBroken, setIsStreakBroken] = useState(true);
+  const [missedDaysCount, setMissedDaysCount] = useState(4);
+  const [isBacklogRecovered, setIsBacklogRecovered] = useState(false);
+  const [recalculatedNotice, setRecalculatedNotice] = useState<string | null>(null);
+
+  // Active Weekly Schedule Tab (Default Week 1)
+  const [activeWeek, setActiveWeek] = useState(1);
+  const [todayCompleted, setTodayCompleted] = useState(false);
+
+  // Hydrate Initial Setup and Profile Data from Onboarding / LocalStorage
+  useEffect(() => {
+    setUserCompetencies(getUserGapCompetencies(user));
+    setStreakDays(getUserStreak(user));
+
+    const handleUpdate = () => setStreakDays(getUserStreak(user));
+    window.addEventListener("kaushalsetu_streak_updated", handleUpdate);
+
+    const cleanEmail = (user?.email || "").toLowerCase().trim();
+    const savedProfile =
+      (user?.id && localStorage.getItem(`kaushalsetu_profile_${user.id}`)) ||
+      (cleanEmail && localStorage.getItem(`kaushalsetu_profile_${cleanEmail}`)) ||
+      localStorage.getItem("kaushalsetu_profile_global");
+
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile);
+        if (parsed.currentJobRole || parsed.targetRole) {
+          setTargetRole(parsed.currentJobRole || parsed.targetRole || "Data Scientist");
+        }
+        if (parsed.targetTimeline) {
+          setTargetCompletion(parsed.targetTimeline);
+        }
+        if (parsed.dailyTime) {
+          setLearningTime(parsed.dailyTime);
+        }
+      } catch {}
+    }
+    return () => window.removeEventListener("kaushalsetu_streak_updated", handleUpdate);
+  }, [user]);
+
+  // Dynamic Weekly Breakdown Calculation based on User's Onboarding Timeframe
+  const getMonths = (timeframeStr: string) => {
+    if (timeframeStr.includes("1 Month")) return 1;
+    if (timeframeStr.includes("3 Months")) return 3;
+    if (timeframeStr.includes("6 Months")) return 6;
+    if (timeframeStr.includes("12 Months")) return 12;
+    return 3;
+  };
+
+  const monthsNum = getMonths(targetCompletion);
+  const totalDays = monthsNum * 30;
+  const totalWeeks = Math.max(4, Math.round(totalDays / 7));
+
+  // NotebookLM-Style Interactive Mind Map State (Pan & Zoom + Collapse)
+  const [zoomScale, setZoomScale] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
+  // Interactive Side Drawer State
+  const [selectedNode, setSelectedNode] = useState<SkillNode | null>(null);
+
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Pan & Zoom Controls
+  const handleZoomIn = () => setZoomScale((z) => Math.min(1.8, z + 0.15));
+  const handleZoomOut = () => setZoomScale((z) => Math.max(0.6, z - 0.15));
+  const handleResetZoom = () => {
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  // Mouse Drag Panning
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest(".interactive-node")) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPanOffset({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
+    });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  // Collapse / Expand Toggle
+  const toggleNodeCollapse = (nodeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCollapsedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
+  };
+
+  // Derive Overall Target Readiness
+  const totalRequired = userCompetencies.reduce((acc, curr) => acc + curr.requiredLevel, 0);
+  const totalCurrent = userCompetencies.reduce((acc, curr) => acc + curr.currentLevel, 0);
+  const overallReadiness = Math.min(100, Math.round((totalCurrent / Math.max(1, totalRequired)) * 100));
+
+  // Compute estimated learning hours based on time target
+  const hoursPerDay = learningTime.includes("30") ? 0.5 : learningTime.includes("2") ? 2 : 1;
+  const totalHours = Math.round(totalDays * hoursPerDay * 0.7);
+
+  // Helper to fetch competency data points
+  const getCompetencyLevel = (namePattern: string, defaultCurrent = 2, defaultReq = 4) => {
+    const found = userCompetencies.find((c) => c.name.toLowerCase().includes(namePattern.toLowerCase()));
+    if (found) {
+      return { current: found.currentLevel, required: found.requiredLevel, gap: found.gap };
+    }
+    return { current: defaultCurrent, required: defaultReq, gap: Math.max(0, defaultReq - defaultCurrent) };
+  };
+
+  const pythonData = getCompetencyLevel("Python", 2, 4);
+  const statsData = getCompetencyLevel("Sampling", 3, 5);
+  const sqlData = getCompetencyLevel("SQL", 3, 4);
+  const mlData = getCompetencyLevel("AI", 1, 3);
+
+  // Build Skill-Tree Mind Map Structure
+  const skillTreeNodes: SkillNode[] = [
+    {
+      id: "root",
+      name: targetRole.toUpperCase(),
+      domain: "Target Career Role",
+      category: "root",
+      currentLevel: Math.round(overallReadiness / 20),
+      requiredLevel: 5,
+      gap: Math.max(0, 5 - Math.round(overallReadiness / 20)),
+      status: overallReadiness >= 80 ? "completed" : "in_progress",
+      phase: 1,
+      whyRequired: `Core target role benchmark for ${targetRole} in government analytics and policy decision making.`,
+      recommendedCourse: {
+        title: `${targetRole} Professional Career Pathway`,
+        provider: "iGOT Karmayogi",
+        durationMinutes: totalHours * 60,
+        courseUrl: "https://igotkarmayogi.gov.in/",
+      },
+      children: [
+        {
+          id: "node-python",
+          name: "PYTHON FOR STATISTICS",
+          domain: "Technical",
+          category: "competency",
+          currentLevel: pythonData.current,
+          requiredLevel: pythonData.required,
+          gap: pythonData.gap,
+          status: pythonData.current >= pythonData.required ? "completed" : isStreakBroken && !isBacklogRecovered ? "backlog" : "in_progress",
+          phase: 1,
+          whyRequired: "Python is required for automated statistical data processing, Pandas dataframes, and survey computations.",
+          recommendedCourse: {
+            title: "Python for Statistical Data Analysis in Governance",
+            provider: "iGOT Karmayogi",
+            durationMinutes: 180,
+            courseUrl: "https://igotkarmayogi.gov.in/courses/python",
+          },
+          children: [
+            {
+              id: "node-pandas",
+              name: "Pandas & NumPy Dataframes",
+              domain: "Technical",
+              category: "skill",
+              currentLevel: Math.min(5, pythonData.current + 1),
+              requiredLevel: 4,
+              gap: Math.max(0, 4 - (pythonData.current + 1)),
+              status: pythonData.current >= 3 ? "completed" : "in_progress",
+              phase: 1,
+              whyRequired: "Essential for loading census CSV/Excel files and running fast matrix math.",
+              recommendedCourse: {
+                title: "Data Wrangling with Pandas & NumPy",
+                provider: "iGOT Karmayogi",
+                durationMinutes: 120,
+                courseUrl: "https://igotkarmayogi.gov.in/courses/python",
+              },
+            },
+            {
+              id: "node-data-cleaning",
+              name: isBacklogRecovered || isStreakBroken ? "Data Cleaning & Imputation" : "Data Cleaning & Imputation",
+              domain: "Technical",
+              category: "topic",
+              currentLevel: pythonData.current,
+              requiredLevel: 4,
+              gap: pythonData.gap,
+              status: isStreakBroken || isBacklogRecovered ? "backlog" : pythonData.current >= 4 ? "completed" : "in_progress",
+              isBacklogRecovery: isStreakBroken || isBacklogRecovered,
+              phase: 2,
+              whyRequired: "Impute missing survey responses and sanitize government field returns. Rebalanced to cover missed learning days.",
+              recommendedCourse: {
+                title: "Statistical Cleaning & Imputation Pipelines (Accelerated Catch-Up)",
+                provider: "NSSTA TPAC",
+                durationMinutes: 150,
+                courseUrl: "https://nssta.gov.in/courses/quality",
+              },
+            },
+          ],
+        },
+        {
+          id: "node-statistics",
+          name: "STATISTICS & SAMPLING",
+          domain: "Statistical",
+          category: "competency",
+          currentLevel: statsData.current,
+          requiredLevel: statsData.required,
+          gap: statsData.gap,
+          status: statsData.current >= statsData.required ? "completed" : "in_progress",
+          phase: 1,
+          whyRequired: "Fundamental for national sample design, stratification, weighting, and confidence intervals.",
+          recommendedCourse: {
+            title: "Advanced Sampling Techniques for National Surveys",
+            provider: "NSSTA TPAC",
+            durationMinutes: 240,
+            courseUrl: "https://nssta.gov.in/courses/sampling",
+          },
+          children: [
+            {
+              id: "node-probability",
+              name: "Probability & Stratification",
+              domain: "Statistical",
+              category: "skill",
+              currentLevel: statsData.current,
+              requiredLevel: 5,
+              gap: Math.max(0, 5 - statsData.current),
+              status: statsData.current >= 4 ? "completed" : "in_progress",
+              phase: 1,
+              whyRequired: "Designing multi-stage stratified sample frames for NSSO socio-economic rounds.",
+              recommendedCourse: {
+                title: "Probability Sampling & Stratified Frames",
+                provider: "NSSTA TPAC",
+                durationMinutes: 180,
+                courseUrl: "https://nssta.gov.in/courses/sampling",
+              },
+            },
+            {
+              id: "node-regression",
+              name: "Regression & Policy Inference",
+              domain: "Statistical",
+              category: "topic",
+              currentLevel: Math.max(1, statsData.current - 1),
+              requiredLevel: 4,
+              gap: Math.max(0, 4 - (statsData.current - 1)),
+              status: isBacklogRecovered ? "backlog" : statsData.current >= 4 ? "completed" : "upcoming",
+              isBacklogRecovery: isBacklogRecovered,
+              phase: 3,
+              whyRequired: "Estimating econometric policy impact and trend regression for ministry reports.",
+              recommendedCourse: {
+                title: "Applied Econometric Regression for Policy",
+                provider: "iGOT Karmayogi",
+                durationMinutes: 200,
+                courseUrl: "https://igotkarmayogi.gov.in/",
+              },
+            },
+          ],
+        },
+        {
+          id: "node-sql",
+          name: "SQL & DATABASE QUERYING",
+          domain: "Technical",
+          category: "competency",
+          currentLevel: sqlData.current,
+          requiredLevel: sqlData.required,
+          gap: sqlData.gap,
+          status: sqlData.current >= sqlData.required ? "completed" : "in_progress",
+          phase: 2,
+          whyRequired: "Querying relational microdata databases, joining multi-round survey tables, and CTE aggregations.",
+          recommendedCourse: {
+            title: "SQL Fundamentals for Government Data Systems",
+            provider: "iGOT Karmayogi",
+            durationMinutes: 120,
+            courseUrl: "https://igotkarmayogi.gov.in/courses/sql",
+          },
+          children: [
+            {
+              id: "node-joins",
+              name: "Complex Joins & Aggregation",
+              domain: "Technical",
+              category: "skill",
+              currentLevel: sqlData.current,
+              requiredLevel: 4,
+              gap: sqlData.gap,
+              status: sqlData.current >= 3 ? "completed" : "in_progress",
+              phase: 2,
+              whyRequired: "Joining household schedules with individual member rosters without duplication.",
+              recommendedCourse: {
+                title: "Advanced Relational SQL for Government Data",
+                provider: "iGOT Karmayogi",
+                durationMinutes: 150,
+                courseUrl: "https://igotkarmayogi.gov.in/courses/sql",
+              },
+            },
+          ],
+        },
+        {
+          id: "node-ml",
+          name: "MACHINE LEARNING & AI",
+          domain: "Advanced AI",
+          category: "competency",
+          currentLevel: mlData.current,
+          requiredLevel: mlData.required,
+          gap: mlData.gap,
+          status: mlData.current >= mlData.required ? "completed" : "upcoming",
+          phase: 4,
+          whyRequired: "Predictive policy modeling, anomaly detection in schemes, and AI-assisted data governance.",
+          recommendedCourse: {
+            title: "Applied AI & Machine Learning for Public Policy",
+            provider: "iGOT Karmayogi",
+            durationMinutes: 300,
+            courseUrl: "https://igotkarmayogi.gov.in/courses/ai-policy",
+          },
+          children: [
+            {
+              id: "node-predictive",
+              name: "Supervised ML Policy Models",
+              domain: "Advanced AI",
+              category: "topic",
+              currentLevel: mlData.current,
+              requiredLevel: 3,
+              gap: mlData.gap,
+              status: "upcoming",
+              phase: 4,
+              whyRequired: "Predicting beneficiary dropouts and target allocation using Random Forest and XGBoost.",
+              recommendedCourse: {
+                title: "Machine Learning Models for Scheme Targeting",
+                provider: "NVIDIA AI Institute",
+                durationMinutes: 240,
+                courseUrl: "https://igotkarmayogi.gov.in/",
+              },
+            },
+            {
+              id: "node-nlp",
+              name: "NLP & Document AI",
+              domain: "Advanced AI",
+              category: "topic",
+              currentLevel: 1,
+              requiredLevel: 3,
+              gap: 2,
+              status: "locked",
+              phase: 5,
+              whyRequired: "Extracting insights from unstructured public grievance logs and administrative text.",
+              recommendedCourse: {
+                title: "NLP for Administrative Intelligence",
+                provider: "NVIDIA AI Institute",
+                durationMinutes: 300,
+                courseUrl: "https://igotkarmayogi.gov.in/",
+              },
+            },
+          ],
+        },
+      ],
+    },
   ];
 
-  const handleRebuildRoadmap = async () => {
-    setIsRebuilding(true);
-    try {
-      const res = await fetch("/api/roadmap/rebuild-streak-backlog", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brokenDays, currentJobRole: selectedRole }),
-      });
-      const data = await res.json();
-      if (data && data.data && data.data.milestones) {
-        const ms: RebuiltMilestone[] = data.data.milestones.map((m: any) => ({
-          id: m.id,
-          title: m.milestoneTitle,
-          domain: m.domain,
-          currentLevel: m.currentLevel,
-          requiredLevel: m.requiredLevel,
-          isBacklogRecovery: m.isBacklogRecovery,
-          recoveryNote: m.recoveryNote,
-          estimatedHours: m.estimatedHours,
-        }));
-        setCustomMilestones(ms);
-      } else {
-        // Fallback local calculation
-        setCustomMilestones([
-          {
-            id: "bm-1",
-            title: `[BACKLOG RECOVERY] Accelerated ${brokenDays}-Day Catch-Up: Sampling & Data Quality`,
-            domain: "Statistical",
-            currentLevel: 3,
-            requiredLevel: 5,
-            isBacklogRecovery: true,
-            recoveryNote: `AI Rebuilt: Covers ${brokenDays} days of missed learning activity from broken streak.`,
-            estimatedHours: brokenDays * 1.5,
-          },
-          {
-            id: "bm-2",
-            title: `[BACKLOG RECOVERY] High-Priority Python & SQL Aggregate Refresher`,
-            domain: "Technical",
-            currentLevel: 2,
-            requiredLevel: 4,
-            isBacklogRecovery: true,
-            recoveryNote: `Consolidated catch-up module to restore active streak momentum.`,
-            estimatedHours: brokenDays * 1.2,
-          },
-          {
-            id: "bm-3",
-            title: "Standard Competency Growth: Survey Design & Metadata Standards",
-            domain: "Statistical",
-            currentLevel: 4,
-            requiredLevel: 5,
-            isBacklogRecovery: false,
-          },
-          {
-            id: "bm-4",
-            title: "Advanced AI & Predictive Policy Modeling",
-            domain: "Technical",
-            currentLevel: 1,
-            requiredLevel: 3,
-            isBacklogRecovery: false,
-          },
-        ]);
-      }
-      setRebuiltNotice(true);
-    } catch {
-      setCustomMilestones([
-        {
-          id: "bm-1",
-          title: `[BACKLOG RECOVERY] Accelerated ${brokenDays}-Day Catch-Up: Sampling & Data Quality`,
-          domain: "Statistical",
-          currentLevel: 3,
-          requiredLevel: 5,
-          isBacklogRecovery: true,
-          recoveryNote: `AI Rebuilt: Covers ${brokenDays} days of missed learning activity from broken streak.`,
-          estimatedHours: brokenDays * 1.5,
-        },
-        {
-          id: "bm-2",
-          title: `[BACKLOG RECOVERY] High-Priority Python & SQL Aggregate Refresher`,
-          domain: "Technical",
-          currentLevel: 2,
-          requiredLevel: 4,
-          isBacklogRecovery: true,
-          recoveryNote: `Consolidated catch-up module to restore active streak momentum.`,
-          estimatedHours: brokenDays * 1.2,
-        },
-        {
-          id: "bm-3",
-          title: "Standard Competency Growth: Survey Design & Metadata Standards",
-          domain: "Statistical",
-          currentLevel: 4,
-          requiredLevel: 5,
-          isBacklogRecovery: false,
-        },
-      ]);
-      setRebuiltNotice(true);
-    } finally {
-      setIsRebuilding(false);
+  // Handle Form Submission
+  const handleGenerateRoadmap = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsGenerated(true);
+    setShowSetupForm(false);
+    setRecalculatedNotice(`Roadmap generated for ${targetRole} (${targetCompletion} target, ${learningTime}).`);
+  };
+
+  // Daily Topic Completion Action
+  const handleCompleteToday = () => {
+    setTodayCompleted(true);
+    const nextStreak = streakDays + 1;
+    setStreakDays(nextStreak);
+    setUserStreak(user, nextStreak);
+    setRecalculatedNotice("Great job! Today's scheduled topic marked completed. Streak incremented!");
+  };
+
+  // Accelerated Backlog Catch-Up Recalculation
+  const handleCoverBacklogASAP = () => {
+    setIsStreakBroken(false);
+    setIsBacklogRecovered(true);
+    setMissedDaysCount(0);
+    setRecalculatedNotice(
+      "Roadmap recalculated! 4 missed topics consolidated into 2 accelerated catch-up micro-modules (+15 min/day) highlighted in distinct Amber/Orange so you catch up in 5 days without schedule overload."
+    );
+  };
+
+  // Roadmap.sh Theme Checkmark Pill Badge Helper
+  const renderPillBadge = (status: SkillNode["status"], isBacklogRecovery?: boolean) => {
+    if (isBacklogRecovery || status === "backlog") {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black tracking-wider flex items-center gap-1 border border-amber-300/40 shadow-sm shrink-0">
+          <AlertTriangle className="h-3 w-3 text-amber-400" /> BACKLOG (+15m)
+        </span>
+      );
     }
+    if (status === "completed") {
+      return (
+        <span className="h-5 w-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm shrink-0">
+          ✓
+        </span>
+      );
+    }
+    if (status === "in_progress") {
+      return (
+        <span className="h-2.5 w-2.5 rounded-full bg-blue-600 animate-ping inline-block shrink-0" />
+      );
+    }
+    if (status === "locked") {
+      return (
+        <Lock className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+      );
+    }
+    return (
+      <span className="h-2.5 w-2.5 rounded-full bg-slate-500 inline-block shrink-0" />
+    );
   };
 
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Header */}
+        {/* Header Banner with Streak Badge & Onboarding Target Info */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
+              <Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[10px] font-bold">
+                Onboarding Target: {targetCompletion} ({totalWeeks} Weeks / {totalDays} Days)
+              </Badge>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight flex items-center gap-2.5 mt-1">
               <Map className="h-7 w-7 text-blue-400" />
               Career Gap Analysis & Skill Roadmap
             </h1>
             <p className="text-slate-400 text-sm mt-1">
-              Select your target job role to view required competency levels and step-by-step learning path.
+              Personalized AI learning pathway adapted to your current test scores, target role, and daily commitment.
             </p>
           </div>
 
-          {/* Job Role Selector Pills */}
-          <div className="flex flex-wrap items-center gap-2">
-            {roles.map((role) => (
-              <button
-                key={role}
-                onClick={() => {
-                  setSelectedRole(role);
-                  setCustomMilestones(null);
-                  setRebuiltNotice(false);
-                }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  selectedRole === role
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25 ring-2 ring-blue-400/30"
-                    : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
-                }`}
-              >
-                <Briefcase className="h-3.5 w-3.5 inline mr-1.5" />
-                {role}
-              </button>
-            ))}
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Daily Streak Counter */}
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-xl shadow-sm">
+              <Flame className="h-4 w-4 text-amber-400 fill-amber-400/20" />
+              <span className="text-xs font-bold text-amber-300">{streakDays} Day Streak</span>
+            </div>
+
+            <Button
+              onClick={() => setShowSetupForm(!showSetupForm)}
+              variant="outline"
+              size="sm"
+              className="border-slate-700 text-slate-200 hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5"
+            >
+              <Sliders className="h-3.5 w-3.5 text-blue-400" />
+              {showSetupForm ? "Hide Setup Form" : "Reconfigure Settings"}
+            </Button>
           </div>
         </div>
 
-        {/* Dynamic Streak Repair & Backlog Recovery Banner */}
-        {isBrokenStreak && (
-          <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-950/80 via-slate-900 to-amber-950/80 border border-amber-500/40 space-y-4 shadow-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-xs font-bold flex items-center gap-1">
-                    <Flame className="h-3.5 w-3.5 fill-amber-400" /> Broken Streak Detected
-                  </Badge>
-                  <span className="text-xs text-amber-400 font-semibold">{brokenDays} Days Missed</span>
+        {/* BROKEN STREAK & BACKLOG RECOVERY NOTIFICATION BANNER */}
+        {isStreakBroken && !isBacklogRecovered && (
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-950/80 via-orange-950/60 to-slate-900 border-2 border-amber-500/60 shadow-2xl space-y-3 animate-in fade-in duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+                    ⚠ Streak Broken ({missedDaysCount} Days Missed)!
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    You missed {missedDaysCount} scheduled days. Trigger Accelerated Backlog Catch-Up to highlight your backlog in <strong className="text-amber-400">Glowing Amber/Orange</strong> and recalculate your {totalDays}-day schedule without overload.
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-white">
-                  Streak Break Backlog Recovery Engine
-                </h3>
-                <p className="text-xs text-slate-300 max-w-xl">
-                  You missed <strong>{brokenDays} days</strong> of learning. Rebuild your roadmap to insert accelerated catch-up modules to cover your backlogs and restore your career progress!
-                </p>
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 p-1.5 rounded-xl text-xs">
-                  <span className="text-slate-400 pl-1 font-medium">Days:</span>
-                  {[3, 4, 5].map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setBrokenDays(d)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                        brokenDays === d ? "bg-amber-500 text-slate-950" : "text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {d}d
-                    </button>
-                  ))}
-                </div>
-
-                <Button
-                  onClick={handleRebuildRoadmap}
-                  disabled={isRebuilding}
-                  className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-extrabold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-amber-500/20"
-                >
-                  {isRebuilding ? (
-                    <>
-                      <RotateCcw className="h-4 w-4 animate-spin" /> Rebuilding Roadmap...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" /> Rebuild Roadmap for Backlog
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Button
+                onClick={handleCoverBacklogASAP}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-amber-500/25 shrink-0 flex items-center gap-2"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Cover Backlog ASAP & Rebalance
+              </Button>
             </div>
-
-            {rebuiltNotice && (
-              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-xs text-emerald-300 font-semibold flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                Roadmap successfully rebuilt by Agentic AI! Backlog recovery tasks added for {brokenDays} missed days.
-              </div>
-            )}
           </div>
         )}
 
-        {/* Milestone Steps / Learning Path */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-indigo-400" />
-              {customMilestones ? "Rebuilt Backlog Recovery Roadmap" : `Milestone Learning Sequence for ${selectedRole}`}
-            </h2>
-            <Badge variant="outline" className="border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs font-semibold">
-              {customMilestones ? "NVIDIA AI Rebuilt" : "AI Optimized Path"}
+        {/* INLINE SETUP FORM ("Build Your Personalized Roadmap") */}
+        {(!isGenerated || showSetupForm) && (
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-indigo-500/30 shadow-2xl space-y-5 animate-in fade-in duration-300">
+            <div className="flex items-start justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-indigo-400" />
+                  Build Your Personalized Roadmap
+                </h2>
+                <p className="text-xs text-slate-300 mt-1 max-w-2xl">
+                  Tell us where you are now and where you want to go. We'll create a learning roadmap based on your current skills, target role and available time.
+                </p>
+              </div>
+
+              {isGenerated && (
+                <button type="button" onClick={() => setShowSetupForm(false)} className="text-slate-400 hover:text-white p-1">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <form onSubmit={handleGenerateRoadmap} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Target Role */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Target Role</label>
+                  <select
+                    value={targetRole}
+                    onChange={(e) => setTargetRole(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="Data Scientist">Data Scientist</option>
+                    <option value="Statistical Officer">Statistical Officer</option>
+                    <option value="Data Analyst">Data Analyst</option>
+                    <option value="Data Engineer">Data Engineer</option>
+                    <option value="Survey Officer">Survey Officer</option>
+                    <option value="Data Processing Officer">Data Processing Officer</option>
+                  </select>
+                </div>
+
+                {/* Current Skill Level */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Current Skill Level</label>
+                  <select
+                    value={currentSkillLevel}
+                    onChange={(e) => setCurrentSkillLevel(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+
+                {/* Assessment Status */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Assessment Status</label>
+                  <div className="w-full bg-slate-950 border border-slate-800 text-emerald-400 rounded-xl text-xs p-3 font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                    {assessmentStatus} (Verified)
+                  </div>
+                </div>
+
+                {/* Target Completion */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Target Completion</label>
+                  <select
+                    value={targetCompletion}
+                    onChange={(e) => setTargetCompletion(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="1 Month">1 Month (30 Days)</option>
+                    <option value="3 Months">3 Months (90 Days)</option>
+                    <option value="6 Months">6 Months (180 Days)</option>
+                    <option value="12 Months">12 Months (365 Days)</option>
+                  </select>
+                </div>
+
+                {/* Learning Time */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Learning Time</label>
+                  <select
+                    value={learningTime}
+                    onChange={(e) => setLearningTime(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="15 min/day">15 min/day</option>
+                    <option value="30 min/day">30 min/day</option>
+                    <option value="45 min/day">45 min/day</option>
+                    <option value="1 hour/day">1 hour/day</option>
+                    <option value="2 hours/day">2 hours/day</option>
+                  </select>
+                </div>
+
+                {/* Primary Goal */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-300">Primary Goal</label>
+                  <select
+                    value={primaryGoal}
+                    onChange={(e) => setPrimaryGoal(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl text-xs p-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  >
+                    <option value="Become Job Ready">Become Job Ready</option>
+                    <option value="Mastery">Mastery</option>
+                    <option value="Skill Upskilling">Skill Upskilling</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <Button
+                  type="submit"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2"
+                >
+                  <Sparkles className="h-4 w-4" /> Generate My Roadmap
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* AFTER GENERATION SUMMARY BANNER */}
+        {isGenerated && (
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 divide-x divide-slate-800/80">
+              <div className="px-3">
+                <p className="text-[11px] text-slate-400 font-medium">Target Role</p>
+                <p className="text-sm font-bold text-white mt-0.5">{targetRole}</p>
+              </div>
+
+              <div className="px-3">
+                <p className="text-[11px] text-slate-400 font-medium">Time Target</p>
+                <p className="text-sm font-bold text-indigo-400 mt-0.5">{targetCompletion} ({totalWeeks} Weeks)</p>
+              </div>
+
+              <div className="px-3">
+                <p className="text-[11px] text-slate-400 font-medium">Current Readiness</p>
+                <p className="text-sm font-bold text-emerald-400 mt-0.5">{overallReadiness}%</p>
+              </div>
+
+              <div className="px-3">
+                <p className="text-[11px] text-slate-400 font-medium">Estimated Learning</p>
+                <p className="text-sm font-bold text-amber-300 mt-0.5">{totalHours} hours</p>
+              </div>
+
+              <div className="px-3">
+                <p className="text-[11px] text-slate-400 font-medium">Daily Commitment</p>
+                <p className="text-sm font-bold text-purple-300 mt-0.5">{learningTime}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* DYNAMIC WEEKLY PROGRESSION BREAKDOWN ({totalWeeks} WEEKS) */}
+        <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-5 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-indigo-400" />
+                Weekly Schedule Breakdown ({totalWeeks} Weeks / {totalDays} Days)
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Structured learning trajectory derived from your onboarding target timeline.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleCompleteToday}
+              disabled={todayCompleted}
+              className={`${
+                todayCompleted
+                  ? "bg-emerald-600 text-white cursor-default"
+                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white"
+              } font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 shadow-md`}
+            >
+              <CheckSquare className="h-4 w-4" />
+              {todayCompleted ? "Today's Topic Completed! ✓" : "Complete Today's Topic (Day 12)"}
+            </Button>
+          </div>
+
+          {/* WEEKLY TABS SELECTOR */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {Array.from({ length: Math.min(12, totalWeeks) }).map((_, idx) => {
+              const weekNum = idx + 1;
+              const isActive = activeWeek === weekNum;
+              return (
+                <button
+                  key={weekNum}
+                  type="button"
+                  onClick={() => setActiveWeek(weekNum)}
+                  className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all shrink-0 border ${
+                    isActive
+                      ? "bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                  }`}
+                >
+                  Week {weekNum}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ACTIVE WEEKLY FOCUS SUMMARY */}
+          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="space-y-1">
+              <span className="text-indigo-400 font-bold">Week {activeWeek} Focus:</span>
+              <p className="text-slate-200 font-semibold">
+                {activeWeek === 1
+                  ? "Python Foundations, Pandas CSV Dataframes & Matrix Ops"
+                  : activeWeek === 2
+                  ? "SQL Relational Queries, Multi-table Joins & CTE Aggregation"
+                  : activeWeek === 3
+                  ? "Probability Sampling, Stratification & Confidence Intervals"
+                  : activeWeek === 4
+                  ? "Applied Regression, Econometric Inference & Policy Reporting"
+                  : `Advanced Module Phase ${activeWeek} — Model Evaluation & Governance`}
+              </p>
+            </div>
+
+            <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-[10px] font-bold self-start sm:self-auto">
+              Days {(activeWeek - 1) * 7 + 1}–{activeWeek * 7} Scheduled
             </Badge>
           </div>
+        </div>
 
-          <div className="space-y-4">
-            {customMilestones
-              ? customMilestones.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className={`p-5 rounded-2xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all ${
-                      item.isBacklogRecovery
-                        ? "bg-amber-950/20 border-amber-500/40 hover:border-amber-400/60"
-                        : "bg-slate-900 border-slate-800 hover:border-blue-500/30"
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 border ${
-                          item.isBacklogRecovery
-                            ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                            : "bg-slate-800 text-blue-400 border-slate-700"
-                        }`}
-                      >
-                        M{index + 1}
+        {/* Dynamic Adaptive Recalculation Notice Banner */}
+        {recalculatedNotice && (
+          <div className="p-3.5 rounded-xl bg-indigo-950/60 border border-indigo-500/40 text-xs text-indigo-200 font-semibold flex items-center justify-between gap-2 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-indigo-400 shrink-0" />
+              <span>{recalculatedNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRecalculatedNotice(null)}
+              className="text-indigo-400 hover:text-white text-[11px] font-bold underline shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* Hexagonal Radar Graph View */}
+        <HexagonalStatsGraph
+          data={userCompetencies.map((c) => ({
+            name: c.name,
+            currentLevel: c.currentLevel,
+            targetLevel: c.requiredLevel,
+          }))}
+          targetRole={targetRole}
+        />
+
+        {/* NOTEBOOKLM-STYLE INTERACTIVE MIND MAP CANVAS */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div>
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Layers className="h-5 w-5 text-indigo-400" />
+                NotebookLM Interactive Mind Map ({targetRole})
+              </h2>
+              <p className="text-xs text-slate-400">
+                Drag to pan, scroll/click to zoom. <strong className="text-amber-400">Rebalanced Backlog Catch-Up nodes are distinctly highlighted in Glowing Amber/Orange</strong>.
+              </p>
+            </div>
+
+            {/* FLOATING PAN & ZOOM CONTROLS */}
+            <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1.5 rounded-xl shadow-lg self-start sm:self-auto">
+              <Button
+                onClick={handleZoomIn}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                title="Zoom In"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={handleZoomOut}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg"
+                title="Zoom Out"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={handleResetZoom}
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-[11px] font-bold text-indigo-400 hover:bg-indigo-950/40 rounded-lg flex items-center gap-1"
+                title="Fit to View"
+              >
+                <Maximize2 className="h-3.5 w-3.5" /> Fit
+              </Button>
+              <span className="text-[10px] font-extrabold text-slate-400 px-2 border-l border-slate-800">
+                {Math.round(zoomScale * 100)}%
+              </span>
+            </div>
+          </div>
+
+          {/* NOTEBOOKLM INTERACTIVE MIND MAP CANVAS CONTAINER */}
+          <div
+            ref={canvasRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            className={`p-8 rounded-3xl bg-slate-950 border border-slate-800 min-h-[560px] overflow-hidden select-none shadow-2xl relative cursor-grab ${
+              isDragging ? "cursor-grabbing" : ""
+            }`}
+          >
+            {/* TRANSFORM WRAPPER FOR PAN & ZOOM */}
+            <div
+              style={{
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomScale})`,
+                transformOrigin: "top center",
+                transition: isDragging ? "none" : "transform 0.15s ease-out",
+              }}
+              className="space-y-12 min-w-[880px] relative z-10"
+            >
+              {skillTreeNodes.map((rootNode) => (
+                <div key={rootNode.id} className="space-y-10 relative">
+                  {/* 1. TOP PURPLE MILESTONE CONTAINER: TARGET ROLE */}
+                  <div className="flex justify-center">
+                    <div
+                      onClick={() => setSelectedNode(rootNode)}
+                      onMouseEnter={() => setHoveredNodeId(rootNode.id)}
+                      onMouseLeave={() => setHoveredNodeId(null)}
+                      className="interactive-node cursor-pointer p-4 rounded-2xl bg-indigo-600 border-2 border-indigo-400 shadow-2xl shadow-indigo-600/40 text-center min-w-[300px] hover:bg-indigo-500 transition-all hover:scale-105"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Target className="h-5 w-5 text-white" />
+                        <span className="font-black text-white text-lg tracking-wider">{rootNode.name}</span>
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-white text-base">{item.title}</h3>
-                          {item.isBacklogRecovery && (
-                            <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px]">
-                              Backlog Catch-Up
-                            </Badge>
-                          )}
-                          <Badge className="bg-slate-800 text-slate-300 text-[10px] border-slate-700">
-                            {item.domain}
-                          </Badge>
-                        </div>
-                        {item.recoveryNote && (
-                          <p className="text-xs text-amber-300 font-medium">{item.recoveryNote}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-xs pt-1">
-                          <span className="text-slate-300">
-                            Current: <strong className="text-white">L{item.currentLevel}</strong>
-                          </span>
-                          <span>•</span>
-                          <span className="text-slate-300">
-                            Required: <strong className="text-blue-400">L{item.requiredLevel}</strong>
-                          </span>
-                          {item.estimatedHours && (
-                            <>
-                              <span>•</span>
-                              <span className="text-amber-400 font-semibold flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> {item.estimatedHours} hrs
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <span className="bg-indigo-950/70 text-indigo-200 border border-indigo-400/40 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                          {overallReadiness}% Role Readiness
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. SVG CONNECTING CURVES LAYER WITH ACTIVE PATH HIGHLIGHTING */}
+                  <div className="relative h-12 w-full">
+                    <svg className="absolute inset-0 w-full h-full overflow-visible pointer-events-none">
+                      <line
+                        x1="50%"
+                        y1="0"
+                        x2="50%"
+                        y2="24"
+                        stroke={hoveredNodeId ? "#818cf8" : "#6366f1"}
+                        strokeWidth={hoveredNodeId ? "3.5" : "2.5"}
+                        className="transition-all"
+                      />
+                      <line x1="12.5%" y1="24" x2="87.5%" y2="24" stroke="#6366f1" strokeWidth="2.5" />
+                      <line x1="12.5%" y1="24" x2="12.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
+                      <line x1="37.5%" y1="24" x2="37.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
+                      <line x1="62.5%" y1="24" x2="62.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
+                      <line x1="87.5%" y1="24" x2="87.5%" y2="48" stroke="#6366f1" strokeWidth="2.5" />
+                    </svg>
+                  </div>
+
+                  {/* 3. 4-COLUMN ROADMAP.SH PILLARS WITH EXPAND/COLLAPSE */}
+                  <div className="grid grid-cols-4 gap-6">
+                    {rootNode.children?.map((compNode) => {
+                      const isCollapsed = collapsedNodes.has(compNode.id);
+                      return (
+                        <div key={compNode.id} className="flex flex-col items-center space-y-4">
+                          {/* PURPLE PILLAR TITLE BOX WITH EXPAND/COLLAPSE BADGE */}
+                          <div
+                            onClick={() => setSelectedNode(compNode)}
+                            onMouseEnter={() => setHoveredNodeId(compNode.id)}
+                            onMouseLeave={() => setHoveredNodeId(null)}
+                            className="interactive-node cursor-pointer w-full p-3 rounded-xl bg-indigo-700 border-2 border-indigo-500 shadow-lg hover:bg-indigo-600 transition-colors relative group"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-extrabold text-white text-xs tracking-wider uppercase block">
+                                {compNode.name}
                               </span>
-                            </>
+
+                              {/* COLLAPSE / EXPAND TOGGLE */}
+                              <button
+                                type="button"
+                                onClick={(e) => toggleNodeCollapse(compNode.id, e)}
+                                className="p-1 rounded-md bg-indigo-900/80 hover:bg-indigo-950 text-indigo-200 text-[10px] font-bold flex items-center gap-1 border border-indigo-400/40"
+                                title={isCollapsed ? "Expand Branch" : "Collapse Branch"}
+                              >
+                                {isCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                              </button>
+                            </div>
+
+                            <span className="text-[10px] text-indigo-200 font-semibold block mt-1">
+                              Phase {compNode.phase} • Level {compNode.currentLevel}/{compNode.requiredLevel}
+                            </span>
+                          </div>
+
+                          {/* SUB-TOPIC GROUP CONTAINER WITH YELLOW/GOLD AND DISTINCT AMBER/ORANGE BACKLOG PILLS */}
+                          {!isCollapsed ? (
+                            <div className="w-full p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-inner animate-in fade-in zoom-in-95 duration-200">
+                              {compNode.children?.map((subNode) => {
+                                const isBacklogNode = subNode.isBacklogRecovery || subNode.status === "backlog";
+                                return (
+                                  <div
+                                    key={subNode.id}
+                                    onClick={() => setSelectedNode(subNode)}
+                                    onMouseEnter={() => setHoveredNodeId(subNode.id)}
+                                    onMouseLeave={() => setHoveredNodeId(null)}
+                                    className={`interactive-node cursor-pointer p-3 rounded-xl border-2 transition-all shadow-md flex items-center justify-between gap-2 hover:scale-[1.02] ${
+                                      isBacklogNode
+                                        ? "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 border-amber-300 text-slate-950 font-black shadow-xl shadow-amber-500/30 animate-pulse hover:from-amber-400 hover:to-orange-400"
+                                        : subNode.status === "completed"
+                                        ? "bg-amber-300 border-amber-400 text-slate-950 font-extrabold hover:bg-amber-200"
+                                        : subNode.status === "in_progress"
+                                        ? "bg-blue-600 border-blue-400 text-white font-bold hover:bg-blue-500"
+                                        : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750"
+                                    }`}
+                                  >
+                                    <span className="font-extrabold text-xs tracking-tight line-clamp-1">
+                                      {subNode.name}
+                                    </span>
+                                    {renderPillBadge(subNode.status, subNode.isBacklogRecovery)}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div
+                              onClick={(e) => toggleNodeCollapse(compNode.id, e)}
+                              className="interactive-node cursor-pointer p-2 px-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] font-bold text-slate-400 hover:text-slate-200 flex items-center gap-1.5"
+                            >
+                              <span>+ {compNode.children?.length || 0} Topics Collapsed</span>
+                            </div>
                           )}
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="w-full md:w-48 space-y-2 text-right">
-                      <div className="flex justify-between md:justify-end gap-2 text-xs font-semibold">
-                        <span className="text-slate-400 md:hidden">Status:</span>
-                        {item.isBacklogRecovery ? (
-                          <span className="text-amber-400 flex items-center gap-1 font-bold">
-                            <Zap className="h-3.5 w-3.5 text-amber-400" /> Catch-Up Module
-                          </span>
-                        ) : (
-                          <span className="text-rose-400 flex items-center gap-1">
-                            <AlertTriangle className="h-3.5 w-3.5" /> -{item.requiredLevel - item.currentLevel} Level Gap
-                          </span>
-                        )}
-                      </div>
-                      <Progress
-                        value={(item.currentLevel / item.requiredLevel) * 100}
-                        className="h-2 bg-slate-800"
-                      />
-                    </div>
+                      );
+                    })}
                   </div>
-                ))
-              : MOCK_COMPETENCIES.map((item, index) => (
-                  <div
-                    key={item.id}
-                    className="p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-blue-500/30 transition-all"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-slate-800 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-700">
-                        M{index + 1}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-white text-base">{item.name}</h3>
-                          <Badge className="bg-slate-800 text-slate-300 text-[10px] border-slate-700">
-                            {item.domain}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-slate-400">{item.description}</p>
-                        <div className="flex items-center gap-4 text-xs pt-1">
-                          <span className="text-slate-300">
-                            Current: <strong className="text-white">L{item.currentLevel}</strong>
-                          </span>
-                          <span>•</span>
-                          <span className="text-slate-300">
-                            Required: <strong className="text-blue-400">L{item.requiredLevel}</strong>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="w-full md:w-48 space-y-2 text-right">
-                      <div className="flex justify-between md:justify-end gap-2 text-xs font-semibold">
-                        <span className="text-slate-400 md:hidden">Gap:</span>
-                        {item.gap > 0 ? (
-                          <span className="text-rose-400 flex items-center gap-1">
-                            <AlertTriangle className="h-3.5 w-3.5" /> -{item.gap} Level Gap
-                          </span>
-                        ) : (
-                          <span className="text-emerald-400 flex items-center gap-1">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Target Achieved
-                          </span>
-                        )}
-                      </div>
-                      <Progress
-                        value={(item.currentLevel / item.requiredLevel) * 100}
-                        className="h-2 bg-slate-800"
-                      />
-                    </div>
-                  </div>
-                ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* NODE CLICK INTERACTION SIDE DRAWER WITH BACKLOG ALERT CALLOUT */}
+        {selectedNode && (
+          <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-slate-900 border-l border-slate-800 shadow-2xl p-6 z-50 space-y-5 animate-in slide-in-from-right duration-250 overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="space-y-1">
+                <Badge className="bg-slate-800 text-slate-300 text-[10px]">{selectedNode.domain}</Badge>
+                <h3 className="font-bold text-white text-lg">{selectedNode.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedNode(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* DISTINCT BACKLOG RECOVERY WARNING CALLOUT */}
+            {(selectedNode.isBacklogRecovery || selectedNode.status === "backlog") && (
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-400/60 text-xs text-amber-200 space-y-1 animate-in fade-in duration-200">
+                <div className="flex items-center gap-2 font-black text-amber-300">
+                  <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span>⚠ ACCELERATED BACKLOG CATCH-UP TASK</span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  This topic was rebalanced into your schedule to cover 4 missed learning days. Complete this module ASAP to restore your full streak momentum in 5 days!
+                </p>
+              </div>
+            )}
+
+            {/* Node Status & Level Specs */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-semibold">Node Status</span>
+                <Badge className={`${selectedNode.isBacklogRecovery || selectedNode.status === "backlog" ? "bg-amber-400 text-slate-950 font-black" : "bg-indigo-500/20 text-indigo-300"} text-xs px-2.5 py-0.5`}>
+                  {selectedNode.isBacklogRecovery ? "BACKLOG CATCH-UP" : selectedNode.status.toUpperCase()}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center pt-1 border-t border-slate-800/80">
+                <div>
+                  <p className="text-[10px] text-slate-400">Current</p>
+                  <p className="text-sm font-bold text-white">{selectedNode.currentLevel} / 5</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400">Required</p>
+                  <p className="text-sm font-bold text-indigo-400">{selectedNode.requiredLevel} / 5</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400">Gap</p>
+                  <p className="text-sm font-bold text-rose-400">-{selectedNode.gap}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Role Justification */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                <Info className="h-4 w-4 text-blue-400" /> Why this is required:
+              </p>
+              <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/80 p-3 rounded-xl border border-slate-800">
+                "{selectedNode.whyRequired}"
+              </p>
+            </div>
+
+            {/* Recommended Learning Module */}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <Badge className="bg-indigo-500/20 text-indigo-300 text-[10px]">
+                  {selectedNode.recommendedCourse.provider}
+                </Badge>
+                <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> {selectedNode.recommendedCourse.durationMinutes} mins
+                </span>
+              </div>
+
+              <h4 className="font-semibold text-xs text-white leading-snug">
+                {selectedNode.recommendedCourse.title}
+              </h4>
+
+              <a
+                href={selectedNode.recommendedCourse.courseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs py-2.5 rounded-lg shadow-lg shadow-amber-500/20 transition-all"
+              >
+                Start Backlog Catch-Up <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

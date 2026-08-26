@@ -22,6 +22,13 @@ export interface AuthUser {
   age?: number;
 }
 
+export interface CertificateItem {
+  name: string;
+  provider?: string;
+  year?: string;
+  url?: string;
+}
+
 export interface OnboardingData {
   fullName: string;
   age?: number;
@@ -31,6 +38,22 @@ export interface OnboardingData {
   yearsOfExperience?: number;
   highestQualification?: string;
   fieldOfStudy?: string;
+  graduationYear?: string;
+  hasWorkExperience?: boolean;
+  targetCareerRole?: string;
+  targetSector?: string;
+  hasPreviousRole?: boolean;
+  previousRole?: string;
+  previousExperienceYears?: string;
+  previousResponsibilities?: string;
+  selectedSkills?: string[];
+  skillProficiencies?: Record<string, string>;
+  hasCertifications?: boolean;
+  certificates?: CertificateItem[];
+  learningGoal?: string;
+  targetTimeline?: string;
+  dailyLearningTime?: string;
+  preferredLearningDays?: string[];
 }
 
 interface AuthContextType {
@@ -82,17 +105,50 @@ function saveRegisteredAccount(email: string, details: AccountDetails) {
   localStorage.setItem("kaushalsetu_registered_accounts", JSON.stringify(accounts));
 }
 
+function normalizeUser(u: any): AuthUser | null {
+  if (!u) return null;
+  const fullName = u.fullName || u.profile?.fullName || "";
+  const department = u.department || u.profile?.department || "";
+  const currentJobRole = u.currentJobRole || u.profile?.currentJobRole || "";
+  const yearsOfExperience = u.yearsOfExperience || u.profile?.yearsOfExperience;
+  const highestQualification = u.highestQualification || u.profile?.highestQualification;
+  const fieldOfStudy = u.fieldOfStudy || u.profile?.fieldOfStudy;
+  const age = u.age || u.profile?.age;
+
+  return {
+    ...u,
+    fullName: fullName || u.fullName,
+    department: department || u.department,
+    currentJobRole: currentJobRole || u.currentJobRole,
+    yearsOfExperience: yearsOfExperience ?? u.yearsOfExperience,
+    highestQualification: highestQualification ?? u.highestQualification,
+    fieldOfStudy: fieldOfStudy ?? u.fieldOfStudy,
+    age: age ?? u.age,
+  };
+}
+
+export function checkIsOnboarded(u: AuthUser | null): boolean {
+  if (!u) return false;
+  const cleanEmail = u.email ? u.email.toLowerCase().trim() : "";
+  if (cleanEmail && localStorage.getItem(`kaushalsetu_onboarded_${cleanEmail}`) === "true") return true;
+  if (u.email && localStorage.getItem(`kaushalsetu_onboarded_${u.email}`) === "true") return true;
+  if (u.id && localStorage.getItem(`kaushalsetu_onboarded_${u.id}`) === "true") return true;
+  if (localStorage.getItem("kaushalsetu_onboarded_global") === "true") return true;
+  if (u.profile || (u.currentJobRole && u.department && u.department !== "NSSO")) return true;
+  return false;
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem("kaushalsetu_token"));
   const [user, setUser] = useState<AuthUser | null>(() => {
     const saved = localStorage.getItem("kaushalsetu_user");
-    return saved ? JSON.parse(saved) : null;
+    return saved ? normalizeUser(JSON.parse(saved)) : null;
   });
   const [isOnboarded, setIsOnboarded] = useState<boolean>(() => {
     const savedUser = localStorage.getItem("kaushalsetu_user");
     if (!savedUser) return false;
-    const u = JSON.parse(savedUser);
-    return localStorage.getItem(`kaushalsetu_onboarded_${u.email}`) === "true";
+    const u = normalizeUser(JSON.parse(savedUser));
+    return checkIsOnboarded(u);
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -105,10 +161,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data && data.data) {
-            const userData = data.data;
+            const userData = normalizeUser(data.data);
             setUser(userData);
             localStorage.setItem("kaushalsetu_user", JSON.stringify(userData));
-            const onboarded = localStorage.getItem(`kaushalsetu_onboarded_${userData.email}`) === "true";
+            const onboarded = checkIsOnboarded(userData);
             setIsOnboarded(onboarded);
           }
         })
@@ -316,16 +372,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...user,
       fullName: data.fullName,
       department: data.department,
-      currentJobRole: data.currentJobRole,
+      currentJobRole: data.currentJobRole || data.targetCareerRole,
       yearsOfExperience: data.yearsOfExperience,
       highestQualification: data.highestQualification,
       fieldOfStudy: data.fieldOfStudy,
       age: data.age,
     };
 
+    const cleanEmail = (user.email || "").toLowerCase().trim();
+
     setUser(updatedUser);
     localStorage.setItem("kaushalsetu_user", JSON.stringify(updatedUser));
-    localStorage.setItem(`kaushalsetu_onboarded_${user.email}`, "true");
+    if (cleanEmail) localStorage.setItem(`kaushalsetu_onboarded_${cleanEmail}`, "true");
+    if (user.email) localStorage.setItem(`kaushalsetu_onboarded_${user.email}`, "true");
+    if (user.id) localStorage.setItem(`kaushalsetu_onboarded_${user.id}`, "true");
+    localStorage.setItem("kaushalsetu_onboarded_global", "true");
+    localStorage.setItem(`kaushalsetu_user_goals_${user.id}`, JSON.stringify(data));
+    if (cleanEmail) localStorage.setItem(`kaushalsetu_user_goals_${cleanEmail}`, JSON.stringify(data));
     setIsOnboarded(true);
     setIsLoading(false);
     return true;

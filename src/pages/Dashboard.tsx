@@ -8,7 +8,8 @@ import {
   fetchApi,
   UserProfile,
   CompetencyItem,
-  CourseItem
+  CourseItem,
+  getUserGapCompetencies
 } from "@/lib/api";
 import {
   Award,
@@ -30,10 +31,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import HexagonalStatsGraph from "@/components/HexagonalStatsGraph";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile>(MOCK_PROFILE);
-  const [competencies, setCompetencies] = useState<CompetencyItem[]>(MOCK_COMPETENCIES);
+  const [competencies, setCompetencies] = useState<CompetencyItem[]>(() => getUserGapCompetencies(user));
   const [courses, setCourses] = useState<CourseItem[]>(MOCK_COURSES);
   const [loading, setLoading] = useState(false);
 
@@ -41,15 +46,18 @@ export default function Dashboard() {
     async function loadData() {
       setLoading(true);
       const userProf = await fetchApi<UserProfile>("/profile", MOCK_PROFILE);
-      const comps = await fetchApi<CompetencyItem[]>("/competencies", MOCK_COMPETENCIES);
       const crses = await fetchApi<CourseItem[]>("/courses", MOCK_COURSES);
-      setProfile(userProf);
-      setCompetencies(comps);
-      setCourses(crses);
+
+      // Hydrate with user's actual onboarding diagnostic assessment gap matrix
+      const userComps = getUserGapCompetencies(user);
+      setCompetencies(userComps);
+
+      if (userProf) setProfile(userProf);
+      if (crses) setCourses(crses);
       setLoading(false);
     }
     loadData();
-  }, []);
+  }, [user]);
 
   // Calculate overall readiness score
   const totalRequired = competencies.reduce((acc, curr) => acc + curr.requiredLevel, 0);
@@ -154,15 +162,15 @@ export default function Dashboard() {
 
         {/* Competencies Breakdown & Gap Progress */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left 2 Cols: Competency Matrix */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Left 2 Cols: Competency Gap Breakdown & Hexagonal Comparison Radar */}
+          <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
                   <Target className="h-5 w-5 text-blue-400" />
-                  Competency Gap Breakdown
+                  Competency Gap Breakdown & Radar Analysis
                 </h2>
-                <p className="text-xs text-slate-400">Assessed levels for {profile.currentJobRole}</p>
+                <p className="text-xs text-slate-400">Diagnostic test-verified levels vs target standard for {profile.currentJobRole}</p>
               </div>
               <Link href="/roadmap">
                 <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 text-xs">
@@ -171,6 +179,17 @@ export default function Dashboard() {
               </Link>
             </div>
 
+            {/* Visual Competency Comparison Hexagonal Radar Graph */}
+            <HexagonalStatsGraph
+              data={competencies.map((c) => ({
+                name: c.name,
+                currentLevel: c.currentLevel,
+                targetLevel: c.requiredLevel,
+              }))}
+              targetRole={profile.currentJobRole}
+            />
+
+            {/* Detailed Itemized Competency Gap Matrix List */}
             <div className="space-y-3">
               {competencies.map((item) => {
                 const percent = Math.round((item.currentLevel / item.requiredLevel) * 100);
@@ -208,7 +227,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Right Col: Recommended Courses & AI Quiz CTA */}
+          {/* Right Col: Recommended iGOT Courses & AI Quiz Generator */}
           <div className="space-y-6">
             {/* Recommended iGOT Courses Card */}
             <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">

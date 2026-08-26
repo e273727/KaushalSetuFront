@@ -19,10 +19,25 @@ export default function Learning() {
     loadCourses();
   }, []);
 
-  const filteredCourses = courses.filter((c) => {
-    const matchesSearch = c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.description.toLowerCase().includes(search.toLowerCase());
-    const matchesDomain = selectedDomain === "All" || c.provider.includes(selectedDomain) || c.competencies.some(comp => comp.toLowerCase().includes(selectedDomain.toLowerCase()));
+  const getCourseCompetencies = (c: any): string[] => {
+    if (Array.isArray(c.competencies) && c.competencies.length > 0) return c.competencies;
+    if (Array.isArray(c.courseCompetencies) && c.courseCompetencies.length > 0) {
+      return c.courseCompetencies.map((cc: any) => cc.competency?.name || cc.competencyId).filter(Boolean);
+    }
+    return ["General Analytics"];
+  };
+
+  const filteredCourses = courses.map((c) => ({
+    ...c,
+    competencyTags: getCourseCompetencies(c),
+  })).filter((c) => {
+    const matchesSearch =
+      (c.title || "").toLowerCase().includes(search.toLowerCase()) ||
+      (c.description || "").toLowerCase().includes(search.toLowerCase());
+    const matchesDomain =
+      selectedDomain === "All" ||
+      (c.provider || "").toLowerCase().includes(selectedDomain.toLowerCase()) ||
+      c.competencyTags.some((comp: string) => comp.toLowerCase().includes(selectedDomain.toLowerCase()));
     return matchesSearch && matchesDomain;
   });
 
@@ -88,10 +103,10 @@ export default function Learning() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
-                    {course.provider}
+                    {course.provider || "iGOT Karmayogi"}
                   </Badge>
                   <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> {course.durationMinutes} mins
+                    <Clock className="h-3.5 w-3.5" /> {course.durationMinutes || 120} mins
                   </span>
                 </div>
 
@@ -106,7 +121,7 @@ export default function Learning() {
 
               <div className="space-y-3 pt-3 border-t border-slate-800/80">
                 <div className="flex flex-wrap gap-1.5">
-                  {course.competencies.map((comp) => (
+                  {course.competencyTags.map((comp) => (
                     <span
                       key={comp}
                       className="px-2 py-0.5 rounded bg-slate-800 text-[11px] text-slate-300 font-medium border border-slate-700/50"
@@ -117,7 +132,7 @@ export default function Learning() {
                 </div>
 
                 <a
-                  href={course.courseUrl}
+                  href={course.courseUrl || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white text-xs font-semibold py-2.5 rounded-lg transition-colors"

@@ -70,6 +70,55 @@ export const MOCK_COMPETENCIES: CompetencyItem[] = [
   { id: "c8", name: "Digital Governance", domain: "Digital Governance", requiredLevel: 3, currentLevel: 2, gap: 1, currentScore: 50, description: "Data privacy and IT security compliance" },
 ];
 
+export function getUserGapCompetencies(user: any): CompetencyItem[] {
+  if (typeof window === "undefined") return MOCK_COMPETENCIES;
+
+  const cleanEmail = (user?.email || "").toLowerCase().trim();
+  const savedMatrix =
+    (user?.id && localStorage.getItem(`kaushalsetu_gap_matrix_${user.id}`)) ||
+    (cleanEmail && localStorage.getItem(`kaushalsetu_gap_matrix_${cleanEmail}`)) ||
+    localStorage.getItem("kaushalsetu_gap_matrix_global");
+
+  if (savedMatrix) {
+    try {
+      const parsed = JSON.parse(savedMatrix);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((item: any, index: number) => ({
+          id: `comp-${index + 1}`,
+          name: item.name,
+          domain: item.name.includes("Python") || item.name.includes("SQL") || item.name.includes("Viz") ? "Technical" : "Statistical",
+          currentLevel: item.testVerifiedLevel || item.selfLevel || 2,
+          requiredLevel: item.reqLevel || 4,
+          gap: item.gap !== undefined ? item.gap : Math.max(0, (item.reqLevel || 4) - (item.testVerifiedLevel || 2)),
+          currentScore: Math.round(((item.testVerifiedLevel || item.selfLevel || 2) / (item.reqLevel || 5)) * 100),
+          description: `Test-verified baseline score from onboarding diagnostic assessment.`,
+        }));
+      }
+    } catch {}
+  }
+  return MOCK_COMPETENCIES;
+}
+
+export function getUserStreak(user?: any): number {
+  if (typeof window === "undefined") return 12;
+  const cleanEmail = (user?.email || "").toLowerCase().trim();
+  const savedStreak =
+    (user?.id && localStorage.getItem(`kaushalsetu_streak_${user.id}`)) ||
+    (cleanEmail && localStorage.getItem(`kaushalsetu_streak_${cleanEmail}`)) ||
+    localStorage.getItem("kaushalsetu_streak_global");
+
+  return savedStreak ? parseInt(savedStreak) || 12 : 12;
+}
+
+export function setUserStreak(user: any, streak: number): void {
+  if (typeof window === "undefined") return;
+  const cleanEmail = (user?.email || "").toLowerCase().trim();
+  if (user?.id) localStorage.setItem(`kaushalsetu_streak_${user.id}`, streak.toString());
+  if (cleanEmail) localStorage.setItem(`kaushalsetu_streak_${cleanEmail}`, streak.toString());
+  localStorage.setItem("kaushalsetu_streak_global", streak.toString());
+  window.dispatchEvent(new Event("kaushalsetu_streak_updated"));
+}
+
 export const MOCK_COURSES: CourseItem[] = [
   {
     id: "course-1",
@@ -183,7 +232,256 @@ export const MOCK_QUESTIONS: QuizQuestion[] = [
   },
 ];
 
-// Role-Based Diagnostic Questions
+// Comprehensive Role and Skill Question Library for Dynamic Quiz Generation
+export const SKILL_QUESTION_BANK: Record<string, QuizQuestion[]> = {
+  Python: [
+    {
+      id: "py-1",
+      competencyName: "Python for Statistics",
+      questionText: "Which Pandas function is optimized for aggregating high-volume time-series survey data by monthly intervals?",
+      difficulty: 3,
+      explanation: "resample('M') aggregates time-series data cleanly by monthly frequencies.",
+      options: [
+        { id: "py-o1", optionText: "df.resample('M').mean()", isCorrect: true },
+        { id: "py-o2", optionText: "df.split_month()", isCorrect: false },
+        { id: "py-o3", optionText: "df.loop_dates()", isCorrect: false },
+        { id: "py-o4", optionText: "pd.monthly_filter()", isCorrect: false },
+      ],
+    },
+    {
+      id: "py-2",
+      competencyName: "Python for Statistics",
+      questionText: "In Python Scipy library, which function performs a two-sample Independent Student's t-test?",
+      difficulty: 4,
+      explanation: "scipy.stats.ttest_ind(sample1, sample2) calculates the T-test for two independent samples.",
+      options: [
+        { id: "py-o5", optionText: "scipy.stats.ttest_ind()", isCorrect: true },
+        { id: "py-o6", optionText: "stats.chisquare()", isCorrect: false },
+        { id: "py-o7", optionText: "numpy.corrcoef()", isCorrect: false },
+        { id: "py-o8", optionText: "pd.t_test()", isCorrect: false },
+      ],
+    },
+  ],
+  SQL: [
+    {
+      id: "sql-1",
+      competencyName: "SQL Querying",
+      questionText: "Which SQL clause allows filtering aggregated groups after a GROUP BY statement?",
+      difficulty: 2,
+      explanation: "HAVING filters groups created by GROUP BY, whereas WHERE filters individual rows prior to grouping.",
+      options: [
+        { id: "sql-o1", optionText: "WHERE", isCorrect: false },
+        { id: "sql-o2", optionText: "HAVING", isCorrect: true },
+        { id: "sql-o3", optionText: "FILTER BY", isCorrect: false },
+        { id: "sql-o4", optionText: "QUALIFY", isCorrect: false },
+      ],
+    },
+    {
+      id: "sql-2",
+      competencyName: "SQL Querying",
+      questionText: "Which SQL window function assigns a rank to each row within a partition without gaps in ranking values?",
+      difficulty: 4,
+      explanation: "DENSE_RANK() ranks items within a partition without leaving gaps for tie scores.",
+      options: [
+        { id: "sql-o5", optionText: "ROW_NUMBER()", isCorrect: false },
+        { id: "sql-o6", optionText: "RANK()", isCorrect: false },
+        { id: "sql-o7", optionText: "DENSE_RANK()", isCorrect: true },
+        { id: "sql-o8", optionText: "COUNT()", isCorrect: false },
+      ],
+    },
+  ],
+  Statistics: [
+    {
+      id: "stat-1",
+      competencyName: "Sampling Techniques",
+      questionText: "In national household surveys, what is the primary benefit of applying sample weights to sample unit observations?",
+      difficulty: 4,
+      explanation: "Sample weights expand sample observations so that survey estimators accurately reflect the target national population distribution.",
+      options: [
+        { id: "stat-o1", optionText: "To inflate sample size artificially", isCorrect: false },
+        { id: "stat-o2", optionText: "To compensate for unequal selection probabilities and non-response", isCorrect: true },
+        { id: "stat-o3", optionText: "To remove non-numeric character strings", isCorrect: false },
+        { id: "stat-o4", optionText: "To encrypt respondent identifiers", isCorrect: false },
+      ],
+    },
+    {
+      id: "stat-2",
+      competencyName: "Sampling Techniques",
+      questionText: "Which sampling design is best suited when sub-populations differ substantially in size and variance?",
+      difficulty: 3,
+      explanation: "Stratified Random Sampling divides the population into homogeneous strata, ensuring accurate variance estimates across distinct groups.",
+      options: [
+        { id: "stat-o5", optionText: "Simple Random Sampling", isCorrect: false },
+        { id: "stat-o6", optionText: "Stratified Random Sampling", isCorrect: true },
+        { id: "stat-o7", optionText: "Convenience Sampling", isCorrect: false },
+        { id: "stat-o8", optionText: "Quota Sampling", isCorrect: false },
+      ],
+    },
+  ],
+  "Data Analysis": [
+    {
+      id: "da-1",
+      competencyName: "Data Quality & Audit",
+      questionText: "What is the primary objective of calculating Mahalanobis Distance in multi-variable statistical auditing?",
+      difficulty: 4,
+      explanation: "Mahalanobis distance measures multi-dimensional distance from a centroid, detecting multivariate statistical outliers.",
+      options: [
+        { id: "da-o1", optionText: "Calculating simple mean values", isCorrect: false },
+        { id: "da-o2", optionText: "Multivariate outlier detection accounting for correlations", isCorrect: true },
+        { id: "da-o3", optionText: "Estimating sample response rate", isCorrect: false },
+        { id: "da-o4", optionText: "Sorting database tables", isCorrect: false },
+      ],
+    },
+    {
+      id: "da-2",
+      competencyName: "Data Quality & Audit",
+      questionText: "What validation step should occur immediately following CAPI (Computer Assisted Personal Interviewing) data ingestion?",
+      difficulty: 3,
+      explanation: "Automated range checks and consistency audits verify that responses adhere to pre-defined physical and logical boundaries.",
+      options: [
+        { id: "da-o5", optionText: "Logical consistency and range validation audits", isCorrect: true },
+        { id: "da-o6", optionText: "Deleting half the records randomly", isCorrect: false },
+        { id: "da-o7", optionText: "Disabling primary key indexes", isCorrect: false },
+        { id: "da-o8", optionText: "Publishing raw unedited microdata", isCorrect: false },
+      ],
+    },
+  ],
+  "Data Visualization": [
+    {
+      id: "viz-1",
+      competencyName: "Data Visualization",
+      questionText: "Which chart type is most appropriate for displaying the distribution of continuous expenditure data across districts?",
+      difficulty: 2,
+      explanation: "Boxplots or Violin plots display median, interquartile range (IQR), and outliers across categories effectively.",
+      options: [
+        { id: "viz-o1", optionText: "Pie Chart", isCorrect: false },
+        { id: "viz-o2", optionText: "Boxplot / Distribution Plot", isCorrect: true },
+        { id: "viz-o3", optionText: "Donut Chart", isCorrect: false },
+        { id: "viz-o4", optionText: "3D Bar Graph", isCorrect: false },
+      ],
+    },
+    {
+      id: "viz-2",
+      competencyName: "Data Visualization",
+      questionText: "When building an interactive dashboard for public policy executives, what is a fundamental UX design best practice?",
+      difficulty: 3,
+      explanation: "Placing high-level key performance indicators (KPIs) at the top followed by detailed drill-down filters maximizes clarity.",
+      options: [
+        { id: "viz-o5", optionText: "Using 20 distinct bright colors on a single grid", isCorrect: false },
+        { id: "viz-o6", optionText: "Executive summary KPI metrics with progressive drill-down details", isCorrect: true },
+        { id: "viz-o7", optionText: "Hiding numeric axis labels completely", isCorrect: false },
+        { id: "viz-o8", optionText: "Rendering static non-interactive images", isCorrect: false },
+      ],
+    },
+  ],
+  "Machine Learning": [
+    {
+      id: "ml-1",
+      competencyName: "AI & Machine Learning",
+      questionText: "Which metric is most appropriate for evaluating a machine learning classifier on an imbalanced dataset where false negatives are costly?",
+      difficulty: 4,
+      explanation: "Recall (Sensitivity) measures the proportion of actual positives correctly identified.",
+      options: [
+        { id: "ml-o1", optionText: "Overall Accuracy", isCorrect: false },
+        { id: "ml-o2", optionText: "Recall / Sensitivity", isCorrect: true },
+        { id: "ml-o3", optionText: "R-Squared", isCorrect: false },
+        { id: "ml-o4", optionText: "Mean Absolute Error", isCorrect: false },
+      ],
+    },
+  ],
+  "R": [
+    {
+      id: "r-1",
+      competencyName: "R Programming",
+      questionText: "In R tidyverse, which function is used to transform data from wide format to long format?",
+      difficulty: 3,
+      explanation: "pivot_longer() in tidyr reshapes wide data into long key-value format.",
+      options: [
+        { id: "r-o1", optionText: "pivot_longer()", isCorrect: true },
+        { id: "r-o2", optionText: "spread()", isCorrect: false },
+        { id: "r-o3", optionText: "group_by()", isCorrect: false },
+        { id: "r-o4", optionText: "mutate()", isCorrect: false },
+      ],
+    },
+  ],
+  "Data Privacy": [
+    {
+      id: "dp-1",
+      competencyName: "Digital Governance",
+      questionText: "What security protocol must be applied before releasing public research microdata files containing personal IDs?",
+      difficulty: 4,
+      explanation: "Anonymization and Statistical Disclosure Control (SDC) remove or mask direct and indirect identifiers.",
+      options: [
+        { id: "dp-o1", optionText: "Statistical Disclosure Control & Anonymization", isCorrect: true },
+        { id: "dp-o2", optionText: "Publishing raw Aadhaar numbers", isCorrect: false },
+        { id: "dp-o3", optionText: "Compressing into ZIP files without encryption", isCorrect: false },
+        { id: "dp-o4", optionText: "Sorting data alphabetically", isCorrect: false },
+      ],
+    },
+  ],
+  "Cloud Computing": [
+    {
+      id: "cc-1",
+      competencyName: "Digital Governance",
+      questionText: "Which architecture model ensures data sovereignty for sensitive public sector survey archives?",
+      difficulty: 3,
+      explanation: "Hybrid Cloud / On-Premise Sovereign Cloud ensures critical government archives remain within national boundaries.",
+      options: [
+        { id: "cc-o1", optionText: "Public Unencrypted Cloud", isCorrect: false },
+        { id: "cc-o2", optionText: "Sovereign Government Hybrid Cloud Architecture", isCorrect: true },
+        { id: "cc-o3", optionText: "Foreign Third-party File Hosting", isCorrect: false },
+        { id: "cc-o4", optionText: "Peer-to-Peer torrent sharing", isCorrect: false },
+      ],
+    },
+  ],
+  "APIs": [
+    {
+      id: "api-1",
+      competencyName: "Digital Governance",
+      questionText: "Which HTTP status code signifies that an API client is unauthenticated and requires a valid JWT token?",
+      difficulty: 2,
+      explanation: "HTTP 401 Unauthorized indicates missing or invalid authentication credentials.",
+      options: [
+        { id: "api-o1", optionText: "200 OK", isCorrect: false },
+        { id: "api-o2", optionText: "401 Unauthorized", isCorrect: true },
+        { id: "api-o3", optionText: "404 Not Found", isCorrect: false },
+        { id: "api-o4", optionText: "500 Internal Error", isCorrect: false },
+      ],
+    },
+  ],
+  "Excel": [
+    {
+      id: "ex-1",
+      competencyName: "Data Quality & Audit",
+      questionText: "Which Excel function calculates conditional sum totals based on multiple criteria criteria arrays?",
+      difficulty: 2,
+      explanation: "SUMIFS allows evaluating multiple conditions across range criteria.",
+      options: [
+        { id: "ex-o1", optionText: "SUMIF", isCorrect: false },
+        { id: "ex-o2", optionText: "SUMIFS", isCorrect: true },
+        { id: "ex-o3", optionText: "VLOOKUP", isCorrect: false },
+        { id: "ex-o4", optionText: "COUNTA", isCorrect: false },
+      ],
+    },
+  ],
+  "GIS": [
+    {
+      id: "gis-1",
+      competencyName: "Survey Design",
+      questionText: "In spatial statistical auditing, what format is standard for vector geospatial boundary layers of administrative districts?",
+      difficulty: 3,
+      explanation: "GeoJSON / Shapefiles store vector geometries (polygons, lines, points) for district boundaries.",
+      options: [
+        { id: "gis-o1", optionText: "JPEG", isCorrect: false },
+        { id: "gis-o2", optionText: "GeoJSON / Shapefile", isCorrect: true },
+        { id: "gis-o3", optionText: "MP3", isCorrect: false },
+        { id: "gis-o4", optionText: "DOCX", isCorrect: false },
+      ],
+    },
+  ],
+};
+
+// Role-Based Core Question Collections
 export const ROLE_DIAGNOSTIC_QUESTIONS: Record<string, QuizQuestion[]> = {
   "Statistical Officer": [
     {
@@ -225,6 +523,19 @@ export const ROLE_DIAGNOSTIC_QUESTIONS: Record<string, QuizQuestion[]> = {
         { id: "so-o12", optionText: "Publishing raw unedited microdata", isCorrect: false },
       ],
     },
+    {
+      id: "so-4",
+      competencyName: "Sampling Techniques",
+      questionText: "Which sampling variance estimation technique handles non-linear statistics in complex multi-stage designs?",
+      difficulty: 4,
+      explanation: "Jackknife repeated replication or Linearization estimates variance in complex multi-stage surveys.",
+      options: [
+        { id: "so-o13", optionText: "Jackknife / Taylor Series Linearization", isCorrect: true },
+        { id: "so-o14", optionText: "Simple Variance Formula", isCorrect: false },
+        { id: "so-o15", optionText: "Standard Deviation of Population", isCorrect: false },
+        { id: "so-o16", optionText: "Mode Calculation", isCorrect: false },
+      ],
+    },
   ],
   "Data Analyst": [
     {
@@ -264,6 +575,19 @@ export const ROLE_DIAGNOSTIC_QUESTIONS: Record<string, QuizQuestion[]> = {
         { id: "da-o10", optionText: "Boxplot / Distribution Plot", isCorrect: true },
         { id: "da-o11", optionText: "Donut Chart", isCorrect: false },
         { id: "da-o12", optionText: "3D Bar Graph", isCorrect: false },
+      ],
+    },
+    {
+      id: "da-4",
+      competencyName: "Data Quality & Audit",
+      questionText: "When dealing with missing survey data, under what condition is Multiple Imputation (MI) preferred over mean imputation?",
+      difficulty: 4,
+      explanation: "Multiple Imputation accounts for uncertainty in missing values, avoiding artificial underestimation of standard errors.",
+      options: [
+        { id: "da-o13", optionText: "When data is Missing Completely at Random (MCAR) or MAR to preserve variance", isCorrect: true },
+        { id: "da-o14", optionText: "Only when sample size is under 10", isCorrect: false },
+        { id: "da-o15", optionText: "To replace all valid non-zero numbers", isCorrect: false },
+        { id: "da-o16", optionText: "When no statistical software is available", isCorrect: false },
       ],
     },
   ],
@@ -324,6 +648,121 @@ export const ROLE_DIAGNOSTIC_QUESTIONS: Record<string, QuizQuestion[]> = {
     },
   ],
 };
+
+/**
+ * Dynamically generates 10 to 20 questions based on user status, target role, education, skills, and goals.
+ */
+export function generateDynamicDiagnosticQuiz(inputs: {
+  targetRole?: string;
+  selectedSkills?: string[];
+  highestQualification?: string;
+  learningGoal?: string;
+}): QuizQuestion[] {
+  const targetRole = inputs.targetRole || "Statistical Officer";
+  const selectedSkills = inputs.selectedSkills || ["Python", "SQL", "Statistics", "Data Analysis"];
+
+  const questions: QuizQuestion[] = [];
+  const seenIds = new Set<string>();
+
+  const addUniqueQuestions = (sourceList: QuizQuestion[]) => {
+    sourceList.forEach((q) => {
+      if (!seenIds.has(q.id)) {
+        seenIds.add(q.id);
+        questions.push(q);
+      }
+    });
+  };
+
+  // 1. Role-based questions
+  const roleQuestions = ROLE_DIAGNOSTIC_QUESTIONS[targetRole] || ROLE_DIAGNOSTIC_QUESTIONS["Statistical Officer"];
+  addUniqueQuestions(roleQuestions);
+
+  // 2. Selected Skill-based questions
+  selectedSkills.forEach((skill) => {
+    const skillQuestions = SKILL_QUESTION_BANK[skill];
+    if (skillQuestions) {
+      addUniqueQuestions(skillQuestions);
+    }
+  });
+
+  // 3. Fallback filler questions from MOCK_QUESTIONS to reach target 12–15 questions (within 10–20 range)
+  addUniqueQuestions(MOCK_QUESTIONS);
+
+  // Add additional generic competency questions if count is still below 10
+  if (questions.length < 10) {
+    const filler: QuizQuestion[] = [
+      {
+        id: "fill-1",
+        competencyName: "Digital Governance",
+        questionText: "Under India's Digital Personal Data Protection (DPDP) standards, what condition permits processing citizen survey data?",
+        difficulty: 3,
+        explanation: "Free, specific, informed, and unambiguous consent or specified lawful public interest uses.",
+        options: [
+          { id: "fill-o1", optionText: "Uninformed automatic scraping", isCorrect: false },
+          { id: "fill-o2", optionText: "Informed consent or legitimate public interest mandate", isCorrect: true },
+          { id: "fill-o3", optionText: "Third-party commercial resale without notice", isCorrect: false },
+          { id: "fill-o4", optionText: "Indefinite storage without security controls", isCorrect: false },
+        ],
+      },
+      {
+        id: "fill-2",
+        competencyName: "Data Analysis",
+        questionText: "What is the primary indicator of multicollinearity in a multiple linear regression model?",
+        difficulty: 4,
+        explanation: "Variance Inflation Factor (VIF) > 5 or 10 signals high multicollinearity among predictors.",
+        options: [
+          { id: "fill-o5", optionText: "High Variance Inflation Factor (VIF)", isCorrect: true },
+          { id: "fill-o6", optionText: "Zero p-value", isCorrect: false },
+          { id: "fill-o7", optionText: "Negative R-Squared", isCorrect: false },
+          { id: "fill-o8", optionText: "High Sample Mean", isCorrect: false },
+        ],
+      },
+      {
+        id: "fill-3",
+        competencyName: "Survey Design",
+        questionText: "In pilot survey pre-testing, what is the primary goal of cognitive interviewing?",
+        difficulty: 3,
+        explanation: "To understand how respondents interpret question wording and retrieve information.",
+        options: [
+          { id: "fill-o9", optionText: "To assess respondent comprehension and question clarity", isCorrect: true },
+          { id: "fill-o10", optionText: "To grade enumerator speed", isCorrect: false },
+          { id: "fill-o11", optionText: "To skip fieldwork completely", isCorrect: false },
+          { id: "fill-o12", optionText: "To calculate total budget", isCorrect: false },
+        ],
+      },
+      {
+        id: "fill-4",
+        competencyName: "Python for Statistics",
+        questionText: "Which Python visualization library is built on top of Matplotlib and integrates tightly with Pandas DataFrames?",
+        difficulty: 2,
+        explanation: "Seaborn provides a high-level interface for drawing attractive statistical graphics on DataFrames.",
+        options: [
+          { id: "fill-o13", optionText: "Seaborn", isCorrect: true },
+          { id: "fill-o14", optionText: "PyGame", isCorrect: false },
+          { id: "fill-o15", optionText: "Flask", isCorrect: false },
+          { id: "fill-o16", optionText: "Django", isCorrect: false },
+        ],
+      },
+      {
+        id: "fill-5",
+        competencyName: "SQL Querying",
+        questionText: "Which SQL operator searches for a specified pattern in a column using wildcards like '%' or '_'?",
+        difficulty: 2,
+        explanation: "LIKE operator matches text patterns using wildcards.",
+        options: [
+          { id: "fill-o17", optionText: "IN", isCorrect: false },
+          { id: "fill-o18", optionText: "LIKE", isCorrect: true },
+          { id: "fill-o19", optionText: "EXISTS", isCorrect: false },
+          { id: "fill-o20", optionText: "BETWEEN", isCorrect: false },
+        ],
+      },
+    ];
+    addUniqueQuestions(filler);
+  }
+
+  // Cap generated questions between 10 and 20 (Targeting ~12-15 questions)
+  return questions.slice(0, 15);
+}
 
 // Helper to safely fetch from backend or fallback to mock
 export async function fetchApi<T>(endpoint: string, fallbackData: T): Promise<T> {
