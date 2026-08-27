@@ -78,6 +78,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Initial registered demo emails & passwords
 const DEFAULT_DEMO_ACCOUNTS: Record<string, string> = {
+  "priya.sharma@kaushalsetu.gov.in": "Password123!",
+  "aarav.verma@kaushalsetu.gov.in": "Password123!",
   "officer@kaushalsetu.gov.in": "Password123!",
   "admin@kaushalsetu.gov.in": "Password123!",
 };
@@ -242,17 +244,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const accountInfo = registeredAccounts[cleanEmail];
-    const derivedName = cleanEmail.includes("admin")
-      ? "System Administrator"
-      : cleanEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    let derivedName = accountInfo?.fullName || cleanEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    let dept = accountInfo?.department || "National Sample Survey Office (NSSO)";
+    let role = accountInfo?.currentJobRole || "Statistical Officer";
+
+    // Special Demo Accounts Setup
+    if (cleanEmail === "priya.sharma@kaushalsetu.gov.in") {
+      derivedName = "Priya Sharma";
+      dept = "Ministry of Statistics & Programme Implementation (MoSPI)";
+      role = "Senior Statistical Officer";
+      localStorage.setItem(`kaushalsetu_onboarded_${cleanEmail}`, "true");
+      localStorage.setItem(`kaushalsetu_streak_${cleanEmail}`, JSON.stringify({ streakCount: 7, lastActivityDate: new Date().toISOString() }));
+    } else if (cleanEmail === "aarav.verma@kaushalsetu.gov.in") {
+      derivedName = "Aarav Verma";
+      dept = "National Sample Survey Office (NSSO)";
+      role = "Junior Statistical Officer";
+      localStorage.removeItem(`kaushalsetu_onboarded_${cleanEmail}`);
+    } else if (cleanEmail.includes("admin")) {
+      derivedName = "System Administrator";
+      dept = "Ministry of Statistics & Programme Implementation";
+      role = "Administrator";
+    }
 
     const authUser: AuthUser = {
-      id: `u-${Date.now()}`,
+      id: cleanEmail === "priya.sharma@kaushalsetu.gov.in" ? "u-priya-01" : cleanEmail === "aarav.verma@kaushalsetu.gov.in" ? "u-aarav-02" : `u-${Date.now()}`,
       email: cleanEmail,
       role: cleanEmail.includes("admin") ? "admin" : "learner",
-      fullName: accountInfo?.fullName || derivedName,
-      department: accountInfo?.department || "National Sample Survey Office (NSSO)",
-      currentJobRole: accountInfo?.currentJobRole || "Statistical Officer",
+      fullName: derivedName,
+      department: dept,
+      currentJobRole: role,
     };
 
     const authToken = "mock_jwt_token_2026";

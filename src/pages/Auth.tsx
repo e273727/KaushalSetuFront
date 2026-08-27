@@ -40,13 +40,19 @@ export default function Auth() {
     return null;
   }
 
-  const handleDemoFill = (type: "officer" | "admin") => {
-    if (type === "officer") {
-      setEmail("officer@kaushalsetu.gov.in");
+  const handleDemoFill = (type: "priya" | "aarav" | "admin") => {
+    if (type === "priya") {
+      setEmail("priya.sharma@kaushalsetu.gov.in");
       setPassword("Password123!");
-      setFullName("Rohit Sharma");
+      setFullName("Priya Sharma");
+      setDepartment("Ministry of Statistics & Programme Implementation");
+      setCurrentJobRole("Senior Statistical Officer");
+    } else if (type === "aarav") {
+      setEmail("aarav.verma@kaushalsetu.gov.in");
+      setPassword("Password123!");
+      setFullName("Aarav Verma");
       setDepartment("National Sample Survey Office (NSSO)");
-      setCurrentJobRole("Statistical Officer");
+      setCurrentJobRole("Junior Statistical Officer");
     } else {
       setEmail("admin@kaushalsetu.gov.in");
       setPassword("Password123!");
@@ -131,24 +137,29 @@ export default function Auth() {
         </div>
 
         {/* Quick Demo Fill Pills */}
-        <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 text-center">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-            Quick Demo Login:
+        <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2 text-center">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+            Select Feature Demo User:
           </span>
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
             <button
               type="button"
-              onClick={() => handleDemoFill("officer")}
-              className="px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500/20 text-xs font-medium transition-colors"
+              onClick={() => handleDemoFill("priya")}
+              title="Priya Sharma: Senior Statistical Officer with 7-day streak, completed assessments & earned certificates"
+              className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 hover:bg-blue-100 text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5"
             >
-              Learner Officer
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>Priya Sharma (Active Progress)</span>
             </button>
+
             <button
               type="button"
-              onClick={() => handleDemoFill("admin")}
-              className="px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 text-xs font-medium transition-colors"
+              onClick={() => handleDemoFill("aarav")}
+              title="Aarav Verma: Junior Statistical Officer (New User) - Triggers fresh profile & prerequisite diagnostic test flow"
+              className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 hover:bg-emerald-100 text-xs font-bold transition-all shadow-2xs flex items-center justify-center gap-1.5"
             >
-              System Admin
+              <User className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Aarav Verma (New User Flow)</span>
             </button>
           </div>
         </div>
