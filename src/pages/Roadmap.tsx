@@ -535,6 +535,22 @@ export default function Roadmap() {
               <span className="text-xs font-bold text-amber-900">{streakDays} Day Streak</span>
             </div>
 
+            {/* Natural Inactivity Status Indicator */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsStreakBroken(!isStreakBroken);
+                setIsBacklogRecovered(false);
+              }}
+              className="flex items-center gap-2 bg-amber-500/10 border border-amber-300 px-3.5 py-1.5 rounded-xl hover:bg-amber-100/60 transition-all"
+              title="Click to toggle missed days state for testing"
+            >
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-700" />
+              <span className="text-xs font-extrabold text-amber-950">
+                {isStreakBroken ? "⚡ 4 Missed Days Detected" : "⚡ Roadmap Adaptive Engine Active"}
+              </span>
+            </button>
+
             <Button
               onClick={() => setShowSetupForm(!showSetupForm)}
               variant="outline"
@@ -547,29 +563,55 @@ export default function Roadmap() {
           </div>
         </div>
 
-        {/* BROKEN STREAK & BACKLOG RECOVERY NOTIFICATION BANNER */}
+        {/* WELCOME BACK & INACTIVITY BACKLOG RECOVERY NOTIFICATION BANNER */}
         {isStreakBroken && !isBacklogRecovered && (
-          <div className="p-5 rounded-2xl bg-amber-50 border border-amber-300 shadow-sm space-y-3 animate-in fade-in duration-300">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-6 w-6 text-amber-700 shrink-0 mt-0.5" />
+          <div className="p-5 rounded-2xl bg-amber-50 border-2 border-amber-300 shadow-sm space-y-3 animate-in fade-in duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="h-10 w-10 rounded-xl bg-amber-100 border border-amber-300 text-amber-800 flex items-center justify-center font-bold shrink-0 mt-0.5 shadow-xs">
+                  <AlertTriangle className="h-5 w-5 text-amber-700" />
+                </div>
                 <div>
-                  <h3 className="text-sm font-bold text-amber-900 flex items-center gap-2">
-                    ⚠ Streak Broken ({missedDaysCount} Days Missed)!
+                  <h3 className="text-sm font-extrabold text-amber-950 flex items-center gap-2">
+                    👋 Welcome back! You missed {missedDaysCount || 4} days of learning.
                   </h3>
-                  <p className="text-xs text-amber-800 font-medium mt-0.5">
-                    You missed {missedDaysCount} scheduled days. Trigger Accelerated Backlog Catch-Up to highlight your backlog in <strong className="text-amber-950 font-black">Glowing Amber/Orange</strong> and recalculate your {totalDays}-day schedule without overload.
+                  <p className="text-xs text-amber-900 font-medium mt-1 leading-relaxed max-w-3xl">
+                    We noticed you logged back in after {missedDaysCount || 4} inactive days. To keep your learning on track without schedule overload, KaushalSetu has identified <strong className="text-amber-950 font-black">2 backlog catch-up modules</strong> highlighted in <strong className="text-amber-950 font-black">Glowing Amber/Orange</strong> in your roadmap graph below (+15 mins/day).
                   </p>
                 </div>
               </div>
 
               <Button
                 onClick={handleCoverBacklogASAP}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-xs shrink-0 flex items-center gap-2"
+                className="bg-amber-700 hover:bg-amber-800 text-white font-extrabold text-xs px-5 py-3 rounded-xl shadow-xs shrink-0 flex items-center gap-2"
               >
-                <RefreshCw className="h-3.5 w-3.5" /> Cover Backlog ASAP & Rebalance
+                <RefreshCw className="h-4 w-4" /> Rebalance Schedule & Catch Up
               </Button>
             </div>
+          </div>
+        )}
+
+        {isBacklogRecovered && (
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 shadow-sm space-y-2 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="h-5 w-5 text-emerald-700 shrink-0" />
+                <h3 className="text-sm font-extrabold text-amber-950">
+                  ⚡ Backlog Catch-Up Activated & Integrated into Roadmap Graph
+                </h3>
+              </div>
+              <Button
+                onClick={() => setIsBacklogRecovered(false)}
+                variant="ghost"
+                size="sm"
+                className="text-xs font-bold text-amber-900 hover:bg-amber-100"
+              >
+                View Missed Days Alert
+              </Button>
+            </div>
+            <p className="text-xs text-amber-900 font-medium">
+              Your 4 missed learning days have been converted into 2 accelerated catch-up micro-modules (+15 min/day) highlighted in <strong className="text-amber-950 font-black">Glowing Amber/Orange</strong> in the graph below. Complete them to fully restore your streak momentum!
+            </p>
           </div>
         )}
 
@@ -796,6 +838,61 @@ export default function Roadmap() {
               Days {(activeWeek - 1) * 7 + 1}–{activeWeek * 7} Scheduled
             </Badge>
           </div>
+
+          {/* REBALANCED BACKLOG CATCH-UP QUEUE IN WEEKLY SCHEDULE */}
+          {(isBacklogRecovered || isStreakBroken) && (
+            <div className="p-4.5 rounded-2xl bg-amber-50/90 border-2 border-amber-300 space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-amber-950 font-extrabold text-xs">
+                  <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0" />
+                  <span>⚡ Rebalanced Backlog Catch-Up Queue ({missedDaysCount || 4} Missed Days)</span>
+                </div>
+                <Badge className="bg-amber-400 text-slate-950 font-black text-[10px]">
+                  +15 Min / Day Pacing
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3.5 rounded-xl bg-white border border-amber-200 flex items-center justify-between gap-2 shadow-2xs">
+                  <div>
+                    <span className="text-[10px] font-black text-amber-900 uppercase tracking-wider block">Catch-Up Module #1</span>
+                    <p className="text-xs font-extrabold text-[#0f172a]">Data Cleaning & Imputation</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Rebalanced from 4 missed learning days</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setRecalculatedNotice("Backlog Catch-Up Module 'Data Cleaning & Imputation' marked completed!");
+                      setStreakDays((s) => s + 1);
+                    }}
+                    className="bg-amber-700 hover:bg-amber-800 text-white font-extrabold text-[11px] px-3.5 py-1.5 rounded-xl shadow-2xs shrink-0"
+                  >
+                    Catch Up ✓
+                  </Button>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-white border border-amber-200 flex items-center justify-between gap-2 shadow-2xs">
+                  <div>
+                    <span className="text-[10px] font-black text-amber-900 uppercase tracking-wider block">Catch-Up Module #2</span>
+                    <p className="text-xs font-extrabold text-[#0f172a]">Regression & Policy Inference</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Rebalanced from 4 missed learning days</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIsBacklogRecovered(false);
+                      setIsStreakBroken(false);
+                      setRecalculatedNotice("All Backlog Catch-Up modules completed! Full streak momentum restored.");
+                      setStreakDays((s) => s + 2);
+                    }}
+                    className="bg-amber-700 hover:bg-amber-800 text-white font-extrabold text-[11px] px-3.5 py-1.5 rounded-xl shadow-2xs shrink-0"
+                  >
+                    Catch Up ✓
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Adaptive Recalculation Notice Banner */}
