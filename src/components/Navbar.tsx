@@ -11,7 +11,8 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ export default function Navbar() {
     { href: "/learning", label: "Courses & Skills", icon: BookOpen },
     { href: "/roadmap", label: "Career Roadmap", icon: Map },
     { href: "/quizzes", label: "Assessments", icon: HelpCircle },
+    { href: "/doc-assistant", label: "AI Doc Assistant", icon: Bot },
   ];
 
   const displayName = getDisplayName(user);

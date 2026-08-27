@@ -520,3 +520,27 @@ export async function fetchApi<T>(endpoint: string, fallbackData: T): Promise<T>
     return fallbackData;
   }
 }
+
+export async function postAgentDocumentChat(params: {
+  query: string;
+  docNames: string[];
+  textContexts: string[];
+}): Promise<any> {
+  const token = localStorage.getItem("kaushalsetu_token") || localStorage.getItem("token");
+  try {
+    const res = await fetch(`${API_BASE}/documents/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(params),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return json.data || json;
+  } catch (err) {
+    console.warn("[KaushalSetu RAG API] /documents/chat error:", err);
+    throw err;
+  }
+}

@@ -9,6 +9,7 @@ import Roadmap from "@/pages/Roadmap";
 import Auth from "@/pages/Auth";
 import Onboarding from "@/pages/Onboarding";
 import Home from "@/pages/Home";
+import DocAssistant from "@/pages/DocAssistant";
 import { Route, Switch, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -59,6 +60,8 @@ function Router() {
       <Route path="/quizzes" component={() => <ProtectedRoute component={Quizzes} />} />
       <Route path="/assessments" component={() => <ProtectedRoute component={Quizzes} />} />
       <Route path="/quiz-generator" component={() => <ProtectedRoute component={Quizzes} />} />
+      <Route path="/doc-assistant" component={() => <ProtectedRoute component={DocAssistant} />} />
+      <Route path="/chatbot" component={() => <ProtectedRoute component={DocAssistant} />} />
       <Route path="/roadmap" component={() => <ProtectedRoute component={Roadmap} />} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
