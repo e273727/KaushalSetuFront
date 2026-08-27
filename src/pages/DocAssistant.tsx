@@ -603,7 +603,7 @@ export default function DocAssistant() {
             </div>
 
             {/* Quick Context Tips Card */}
-            <div className="bg-linear-to-br from-blue-900 to-[#0f172a] p-4 rounded-2xl text-white space-y-2 shadow-xs">
+            <div className="bg-gradient-to-br from-blue-950 via-slate-900 to-indigo-950 p-4.5 rounded-2xl text-white space-y-2 shadow-md border border-blue-800/40 hover-lift">
               <div className="flex items-center gap-2 font-bold text-xs text-blue-200">
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
                 <span>Agentic AI Grounding Guaranteed</span>
@@ -618,14 +618,14 @@ export default function DocAssistant() {
           {/* ============================================================ */}
           {/* RIGHT COLUMN: AGENTIC AI INTERACTIVE CHAT ENGINE (8 COLS)     */}
           {/* ============================================================ */}
-          <div className="lg:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-xs h-[680px]">
+          <div className="lg:col-span-8 flex flex-col bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-md hover:shadow-xl transition-all duration-300 h-[680px]">
             
             {/* Chat Header */}
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
+            <div className="p-4 border-b border-slate-200/80 flex items-center justify-between bg-gradient-to-r from-slate-50/80 via-white to-blue-50/40 rounded-t-2xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="h-9 w-9 rounded-xl bg-blue-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                    <Sparkles className="h-5 w-5 text-amber-300" />
+                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-900 to-indigo-950 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                    <Sparkles className="h-5 w-5 text-amber-300 animate-pulse" />
                   </div>
                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                 </div>
@@ -640,7 +640,7 @@ export default function DocAssistant() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-emerald-50 border-emerald-300 text-emerald-900 text-[10px] font-bold">
+                <Badge variant="outline" className="bg-emerald-50/80 border-emerald-300 text-emerald-900 text-[10px] font-bold shadow-2xs">
                   Online
                 </Badge>
               </div>

@@ -57,17 +57,17 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
+    <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-slate-200/80 shadow-xs transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* System Brand Logo */}
           <div className="flex items-center gap-6">
             <Link href="/dashboard" className="flex items-center gap-3 group">
-              <div className="h-9 w-9 rounded-lg bg-[#1e3a8a] flex items-center justify-center text-white font-extrabold text-sm shadow-xs border border-blue-900">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 flex items-center justify-center text-white font-black text-sm shadow-md border border-blue-700/50 group-hover:scale-105 transition-transform duration-200">
                 KS
               </div>
               <div className="flex flex-col">
-                <span className="font-extrabold text-base text-[#0f172a] tracking-tight leading-none group-hover:text-[#1e3a8a] transition-colors">
+                <span className="font-extrabold text-base text-[#0f172a] tracking-tight leading-none group-hover:text-blue-700 transition-colors">
                   KaushalSetu
                 </span>
                 <span className="text-[10px] font-bold text-slate-500 leading-tight mt-0.5">
@@ -77,7 +77,7 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Navigation Menu */}
-            <nav className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-6 ml-2">
+            <nav className="hidden md:flex items-center gap-1 border-l border-slate-200/80 pl-6 ml-2">
               {navItems.map((item) => {
                 const isActive = location === item.href || (item.href === "/quizzes" && location === "/assessments");
                 const Icon = item.icon;
@@ -85,13 +85,13 @@ export default function Navbar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
                       isActive
-                        ? "bg-[#0f172a] text-white shadow-xs"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        ? "bg-[#0f172a] text-white shadow-sm scale-[1.02]"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 hover:scale-[1.01]"
                     }`}
                   >
-                    <Icon className={`h-4 w-4 ${isActive ? "text-blue-300" : "text-slate-500"}`} />
+                    <Icon className={`h-4 w-4 ${isActive ? "text-amber-300" : "text-slate-500"}`} />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -101,9 +101,9 @@ export default function Navbar() {
 
           {/* Right Header Actions */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Restrained Daily Streak Counter Badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-xs">
-              <Flame className="h-4 w-4 text-amber-600 fill-amber-500/20" />
+            {/* Glowing Daily Streak Counter Badge */}
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-400/10 to-orange-500/10 border border-amber-300/80 text-amber-900 text-xs font-extrabold shadow-xs hover:shadow-amber-200/50 transition-all">
+              <Flame className="h-4 w-4 text-amber-600 fill-amber-500/30 animate-pulse" />
               <span>{streak} Day Streak</span>
             </div>
 
