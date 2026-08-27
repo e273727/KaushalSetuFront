@@ -74,10 +74,24 @@ export default function Roadmap() {
   const [learningTime, setLearningTime] = useState("1 hour/day");
   const [primaryGoal, setPrimaryGoal] = useState("Become Job Ready");
 
-  // Streak & Backlog Recovery State
+  // Streak & Backlog Recovery State (Per-user scoped)
   const [streakDays, setStreakDays] = useState(() => getUserStreak(user));
-  const [isStreakBroken, setIsStreakBroken] = useState(true);
-  const [missedDaysCount, setMissedDaysCount] = useState(4);
+  const [isStreakBroken, setIsStreakBroken] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const cleanEmail = (user?.email || "").toLowerCase().trim();
+    const savedBroken =
+      (user?.id && localStorage.getItem(`kaushalsetu_streak_broken_${user.id}`)) ||
+      (cleanEmail && localStorage.getItem(`kaushalsetu_streak_broken_${cleanEmail}`));
+    return savedBroken === "true";
+  });
+  const [missedDaysCount, setMissedDaysCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const cleanEmail = (user?.email || "").toLowerCase().trim();
+    const savedMissed =
+      (user?.id && localStorage.getItem(`kaushalsetu_missed_days_${user.id}`)) ||
+      (cleanEmail && localStorage.getItem(`kaushalsetu_missed_days_${cleanEmail}`));
+    return savedMissed ? parseInt(savedMissed) || 0 : 0;
+  });
   const [isBacklogRecovered, setIsBacklogRecovered] = useState(false);
   const [recalculatedNotice, setRecalculatedNotice] = useState<string | null>(null);
 

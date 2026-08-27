@@ -264,7 +264,20 @@ export default function DocAssistant() {
     
     let structuredRes: AgentJsonResponse;
 
-    if (activeDocs.length === 0) {
+    if (lowerQ === "hi" || lowerQ === "hello" || lowerQ.includes("hello") || lowerQ.includes("hey") || lowerQ.includes("who are you") || lowerQ.includes("help") || lowerQ.includes("good morning") || lowerQ.includes("good afternoon")) {
+      structuredRes = {
+        type: "explanation",
+        title: "Welcome to KaushalSetu Agent AI",
+        answer: "Hello! I am your KaushalSetu Agentic AI Document Assistant. How can I help you today with your learning materials or statistical guidelines?",
+        key_points: [
+          "Upload up to 5 documents simultaneously (PDFs, survey manuals, guidelines).",
+          "Ask any methodology doubts, request document summaries, or generate custom assessment quizzes."
+        ],
+        examples: [],
+        sources: [],
+        confidence: "high",
+      };
+    } else if (activeDocs.length === 0) {
       structuredRes = {
         type: "not_found",
         title: "No Documents Uploaded",
