@@ -1100,28 +1100,30 @@ export default function Onboarding() {
               {/* Questions List */}
               <div className="space-y-4">
                 {dynamicQuestions.map((q, idx) => (
-                  <div key={q.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                  <div key={q.id} className="p-4.5 rounded-2xl bg-white border border-slate-200/90 space-y-3 shadow-xs text-[#0f172a]">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-purple-400">Question {idx + 1} of {dynamicQuestions.length}</span>
-                      <span className="text-slate-400">Domain: {q.competencyName}</span>
+                      <span className="font-extrabold text-blue-900">Question {idx + 1} of {dynamicQuestions.length}</span>
+                      <span className="text-slate-500 font-bold">Domain: {q.competencyName}</span>
                     </div>
 
-                    <p className="text-sm font-semibold text-white">{q.questionText}</p>
+                    <p className="text-sm font-bold text-[#0f172a] leading-relaxed">{q.questionText}</p>
 
                     <div className="space-y-2">
                       {q.options.map((opt) => {
                         const isSelected = selectedAnswers[q.id] === opt.id;
-                        let optStyle = "border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800";
+                        let optStyle = "border-slate-200 bg-slate-50 text-[#0f172a] hover:bg-blue-50/60 font-medium";
 
                         if (isSelected) {
-                          optStyle = "border-purple-500 bg-purple-500/10 text-purple-300 ring-1 ring-purple-500";
+                          optStyle = "border-blue-800 bg-blue-900 text-white font-bold shadow-xs";
                         }
 
                         if (testSubmitted) {
                           if (opt.isCorrect) {
-                            optStyle = "border-emerald-500 bg-emerald-500/20 text-emerald-300 font-semibold";
+                            optStyle = "border-emerald-400 bg-emerald-50 text-emerald-950 font-black shadow-xs ring-1 ring-emerald-400";
                           } else if (isSelected && !opt.isCorrect) {
-                            optStyle = "border-rose-500 bg-rose-500/20 text-rose-300";
+                            optStyle = "border-rose-400 bg-rose-50 text-rose-950 font-bold shadow-xs ring-1 ring-rose-300";
+                          } else {
+                            optStyle = "border-slate-200 bg-slate-50/80 text-slate-700 font-medium opacity-80";
                           }
                         }
 
@@ -1131,14 +1133,14 @@ export default function Onboarding() {
                             type="button"
                             onClick={() => handleSelectOption(q.id, opt.id)}
                             disabled={testSubmitted}
-                            className={`w-full p-3 rounded-lg text-left border text-xs transition-all flex items-center justify-between ${optStyle}`}
+                            className={`w-full p-3.5 rounded-xl text-left border text-xs transition-all flex items-center justify-between gap-3 ${optStyle}`}
                           >
-                            <span>{opt.optionText}</span>
+                            <span className="text-xs">{opt.optionText}</span>
                             {testSubmitted && opt.isCorrect && (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                              <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
                             )}
                             {testSubmitted && isSelected && !opt.isCorrect && (
-                              <XCircle className="h-4 w-4 text-rose-400 shrink-0" />
+                              <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
                             )}
                           </button>
                         );
