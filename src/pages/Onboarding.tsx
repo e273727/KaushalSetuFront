@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth, CertificateItem } from "@/contexts/AuthContext";
-import { generateDynamicDiagnosticQuiz, QuizQuestion } from "@/lib/api";
+import { generateDynamicDiagnosticQuiz, QuizQuestion, MOCK_COURSES, CourseItem } from "@/lib/api";
 import {
   User,
   Building2,
@@ -129,7 +129,8 @@ export default function Onboarding() {
     { name: "Public Sector Data Quality Certification", provider: "NSSTA", year: "2023" },
   ]);
 
-  // STEP 5: Learning Goal & Schedule
+  // STEP 5: Learning Goal & Course Selection
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("course-1");
   const [learningGoal, setLearningGoal] = useState("Improve my current job skills");
   const [targetTimeline, setTargetTimeline] = useState("3–6 months");
   const [dailyLearningTime, setDailyLearningTime] = useState("1 hour");
@@ -172,6 +173,7 @@ export default function Onboarding() {
       if (savedGoalsRaw) {
         try {
           const parsed = JSON.parse(savedGoalsRaw);
+          if (parsed.selectedCourseId) setSelectedCourseId(parsed.selectedCourseId);
           if (parsed.learningGoal) setLearningGoal(parsed.learningGoal);
           if (parsed.targetTimeline) setTargetTimeline(parsed.targetTimeline);
           if (parsed.dailyLearningTime) setDailyLearningTime(parsed.dailyLearningTime);
@@ -190,9 +192,10 @@ export default function Onboarding() {
     }
   }, [user]);
 
-  // Dynamically generate 10 to 20 questions based on user's status, education, skills, and goals
+  // Dynamically generate questions tailored specifically to selected course & prerequisite competencies
   const dynamicQuestions: QuizQuestion[] = generateDynamicDiagnosticQuiz({
     targetRole: activeTargetRole,
+    selectedCourseId,
     selectedSkills,
     highestQualification,
     learningGoal,
@@ -916,6 +919,44 @@ export default function Onboarding() {
                 <p className="text-xs text-slate-400">Configure your adaptive roadmap pacing and daily schedule</p>
               </div>
 
+              {/* Target Course / Pathway Selector (Drives Diagnostic Test) */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                  <span>Primary Target Course / Learning Pathway</span>
+                  <span className="text-[10px] text-blue-400 font-normal">Diagnostic test will assess prerequisites for this course</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {MOCK_COURSES.map((crs) => {
+                    const isSelected = selectedCourseId === crs.id;
+                    return (
+                      <button
+                        key={crs.id}
+                        type="button"
+                        onClick={() => setSelectedCourseId(crs.id)}
+                        className={`p-3.5 rounded-xl border text-left transition-all space-y-1.5 ${
+                          isSelected
+                            ? "bg-blue-600/20 border-blue-500 text-white ring-1 ring-blue-500 shadow-md"
+                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-extrabold text-blue-400">{crs.provider}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">Level {crs.level}</span>
+                        </div>
+                        <p className="text-xs font-bold text-slate-100 leading-snug">{crs.title}</p>
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {crs.competencies.map((comp, cIdx) => (
+                            <span key={cIdx} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 font-medium">
+                              Prerequisite: {comp}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Learning Goal */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
@@ -1030,6 +1071,31 @@ export default function Onboarding() {
                   {dynamicQuestions.length} Custom Questions
                 </Badge>
               </div>
+
+              {/* Course Prerequisite Assessment Header Card */}
+              {(() => {
+                const matchedCourse = MOCK_COURSES.find((c) => c.id === selectedCourseId);
+                return (
+                  <div className="p-3.5 rounded-xl bg-blue-950/60 border border-blue-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+                        <BookOpen className="h-5 w-5 text-amber-300" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-extrabold text-white flex items-center gap-2">
+                          <span>Target Course: {matchedCourse?.title || "Selected Pathway"}</span>
+                        </p>
+                        <p className="text-[11px] text-blue-300 font-medium">
+                          Assessing Prerequisite Competencies: {matchedCourse?.competencies.join(", ") || "Core Skills"}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-600 text-white border-blue-400 text-[10px] font-bold shrink-0 self-start sm:self-auto">
+                      Course Assessment
+                    </Badge>
+                  </div>
+                );
+              })()}
 
               {/* Questions List */}
               <div className="space-y-4">

@@ -400,10 +400,12 @@ export const ROLE_DIAGNOSTIC_QUESTIONS: Record<string, QuizQuestion[]> = {
 };
 
 /**
- * Dynamically generates 10 to 20 questions based on user status, target role, education, skills, and goals.
+ * Dynamically generates 10 to 20 questions based on user status, target course, required prerequisites, target role, education, skills, and goals.
  */
 export function generateDynamicDiagnosticQuiz(inputs: {
   targetRole?: string;
+  selectedCourseId?: string;
+  selectedCourseTitle?: string;
   selectedSkills?: string[];
   highestQualification?: string;
   learningGoal?: string;
@@ -423,11 +425,28 @@ export function generateDynamicDiagnosticQuiz(inputs: {
     });
   };
 
-  // 1. Role-based questions
+  // 1. Course-Specific & Prerequisite Questions (Highest Priority)
+  const targetCourse = MOCK_COURSES.find(
+    (c) => c.id === inputs.selectedCourseId || c.title === inputs.selectedCourseTitle
+  );
+
+  if (targetCourse) {
+    const courseCompetencies = targetCourse.competencies || [];
+    const courseQuestions = MASTER_QUESTION_BANK.filter((q) =>
+      courseCompetencies.some(
+        (comp) =>
+          q.competencyName.toLowerCase().includes(comp.toLowerCase()) ||
+          (q.domain && q.domain.toLowerCase().includes(comp.toLowerCase()))
+      )
+    );
+    addUniqueQuestions(courseQuestions);
+  }
+
+  // 2. Role-based questions
   const roleQuestions = ROLE_DIAGNOSTIC_QUESTIONS[targetRole] || ROLE_DIAGNOSTIC_QUESTIONS["Statistical Officer"];
   addUniqueQuestions(roleQuestions);
 
-  // 2. Selected Skill-based questions
+  // 3. Selected Skill-based questions
   selectedSkills.forEach((skill) => {
     const skillQuestions = SKILL_QUESTION_BANK[skill];
     if (skillQuestions) {
@@ -435,7 +454,7 @@ export function generateDynamicDiagnosticQuiz(inputs: {
     }
   });
 
-  // 3. Fallback filler questions from MOCK_QUESTIONS to reach target 12–15 questions (within 10–20 range)
+  // 4. Fallback filler questions from MOCK_QUESTIONS to reach target 12–15 questions
   addUniqueQuestions(MOCK_QUESTIONS);
 
   // Add additional generic competency questions if count is still below 10
