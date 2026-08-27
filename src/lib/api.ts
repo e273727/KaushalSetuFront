@@ -101,22 +101,28 @@ export function getUserGapCompetencies(user: any): CompetencyItem[] {
 }
 
 export function getUserStreak(user?: any): number {
-  if (typeof window === "undefined") return 12;
+  if (typeof window === "undefined") return 1;
+  if (!user || (!user.id && !user.email)) {
+    const anonStreak = localStorage.getItem("kaushalsetu_streak_anon");
+    return anonStreak ? parseInt(anonStreak) || 1 : 1;
+  }
   const cleanEmail = (user?.email || "").toLowerCase().trim();
   const savedStreak =
     (user?.id && localStorage.getItem(`kaushalsetu_streak_${user.id}`)) ||
-    (cleanEmail && localStorage.getItem(`kaushalsetu_streak_${cleanEmail}`)) ||
-    localStorage.getItem("kaushalsetu_streak_global");
+    (cleanEmail && localStorage.getItem(`kaushalsetu_streak_${cleanEmail}`));
 
-  return savedStreak ? parseInt(savedStreak) || 12 : 12;
+  return savedStreak ? parseInt(savedStreak) || 1 : 1;
 }
 
 export function setUserStreak(user: any, streak: number): void {
   if (typeof window === "undefined") return;
-  const cleanEmail = (user?.email || "").toLowerCase().trim();
-  if (user?.id) localStorage.setItem(`kaushalsetu_streak_${user.id}`, streak.toString());
-  if (cleanEmail) localStorage.setItem(`kaushalsetu_streak_${cleanEmail}`, streak.toString());
-  localStorage.setItem("kaushalsetu_streak_global", streak.toString());
+  if (!user || (!user.id && !user.email)) {
+    localStorage.setItem("kaushalsetu_streak_anon", streak.toString());
+  } else {
+    const cleanEmail = (user?.email || "").toLowerCase().trim();
+    if (user?.id) localStorage.setItem(`kaushalsetu_streak_${user.id}`, streak.toString());
+    if (cleanEmail) localStorage.setItem(`kaushalsetu_streak_${cleanEmail}`, streak.toString());
+  }
   window.dispatchEvent(new Event("kaushalsetu_streak_updated"));
 }
 
