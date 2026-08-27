@@ -382,20 +382,20 @@ export default function Onboarding() {
   const topGaps = gapMatrix.filter((g) => g.gap > 0).sort((a, b) => b.gap - a.gap).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/30 text-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Background Decorative Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-blue-600/20 to-indigo-500/15 blur-[140px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-blue-400/10 to-indigo-400/10 blur-[140px] rounded-full pointer-events-none" />
 
       <div className="max-w-3xl w-full space-y-8 relative z-10 py-8">
         {/* Brand Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="h-3.5 w-3.5" /> KaushalSetu Professional Profile Builder
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold uppercase tracking-wider shadow-2xs">
+            <Sparkles className="h-3.5 w-3.5 text-blue-600" /> KaushalSetu Professional Profile Builder
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-3xl font-extrabold text-[#0f172a] tracking-tight">
             Map Your Competency & Career State
           </h1>
-          <p className="text-slate-400 text-sm max-w-lg mx-auto">
+          <p className="text-slate-600 text-sm max-w-lg mx-auto font-medium">
             Establish your current skill baseline and target career role to calculate personalized learning gaps.
           </p>
         </div>
@@ -414,15 +414,15 @@ export default function Onboarding() {
               <div
                 className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   step === s.id
-                    ? "bg-blue-600 text-white ring-4 ring-blue-500/20 shadow-lg shadow-blue-500/30"
+                    ? "bg-blue-900 text-white ring-4 ring-blue-500/20 shadow-md"
                     : step > s.id
                     ? "bg-emerald-600 text-white"
-                    : "bg-slate-900 border border-slate-800 text-slate-500"
+                    : "bg-slate-100 border border-slate-200 text-slate-500"
                 }`}
               >
                 {step > s.id ? <CheckCircle2 className="h-4 w-4" /> : s.id}
               </div>
-              <span className="text-[10px] font-semibold text-slate-300 text-center hidden sm:block">
+              <span className="text-[10px] font-bold text-slate-600 text-center hidden sm:block">
                 {s.label}
               </span>
             </div>
@@ -430,17 +430,17 @@ export default function Onboarding() {
         </div>
 
         {/* Main Form Card Container */}
-        <div className="p-6 md:p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6">
+        <div className="p-6 md:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-xl space-y-6 text-slate-900">
           
           {/* ==================== STEP 1: Current Status ==================== */}
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="border-b border-slate-800 pb-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <User className="h-5 w-5 text-blue-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                  <User className="h-5 w-5 text-blue-800" />
                   Step 1: Current Status & Background
                 </h2>
-                <p className="text-xs text-slate-400">Tell us about your professional work experience</p>
+                <p className="text-xs text-slate-500 font-medium">Tell us about your professional work experience</p>
               </div>
 
               {/* Work Experience Radio Selector */}
@@ -455,7 +455,7 @@ export default function Onboarding() {
                     className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
                       hasWorkExperience
                         ? "bg-blue-600/10 border-blue-500 text-white ring-1 ring-blue-500"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800"
+                        : "bg-slate-50 border-slate-200 text-[#0f172a]"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -474,7 +474,7 @@ export default function Onboarding() {
                     className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
                       !hasWorkExperience
                         ? "bg-blue-600/10 border-blue-500 text-white ring-1 ring-blue-500"
-                        : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800"
+                        : "bg-slate-50 border-slate-200 text-[#0f172a]"
                     }`}
                   >
                     <div className="flex items-center gap-3">

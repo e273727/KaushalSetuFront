@@ -154,28 +154,26 @@ export default function Auth() {
         </div>
 
         {/* Auth Card Box */}
-        <div className="p-6 md:p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6">
+        <div className="p-6 md:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-xl space-y-6 text-slate-900">
           {/* Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-950 border border-slate-800 text-xs font-bold">
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold">
             <button
               type="button"
               onClick={() => setMode("login")}
-              className={`py-2.5 rounded-lg transition-all ${
-                mode === "login"
-                  ? "bg-blue-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
-              }`}
+              className={`py-2.5 rounded-lg transition-all ${mode === "login"
+                  ? "bg-blue-900 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Sign In
             </button>
             <button
               type="button"
               onClick={() => setMode("register")}
-              className={`py-2.5 rounded-lg transition-all ${
-                mode === "register"
-                  ? "bg-blue-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
-              }`}
+              className={`py-2.5 rounded-lg transition-all ${mode === "register"
+                  ? "bg-blue-900 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Register
             </button>
@@ -183,8 +181,8 @@ export default function Auth() {
 
           {/* Error Message Notification */}
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center justify-between gap-2">
-              <span className="text-rose-400 font-bold text-sm">{errorMsg}</span>
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-semibold flex items-center justify-between gap-2">
+              <span className="text-rose-800 font-bold text-xs">{errorMsg}</span>
               {mode === "login" && errorMsg === "Sign up first" && (
                 <button
                   type="button"
@@ -192,7 +190,7 @@ export default function Auth() {
                     setMode("register");
                     setErrorMsg("");
                   }}
-                  className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] transition-colors shrink-0"
+                  className="px-3 py-1 rounded-lg bg-blue-900 hover:bg-blue-800 text-white font-bold text-[11px] transition-colors shrink-0"
                 >
                   Register Now
                 </button>
@@ -204,7 +202,7 @@ export default function Auth() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "register" && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Full Name
                 </label>
                 <div className="relative">
@@ -215,14 +213,14 @@ export default function Auth() {
                     placeholder="e.g. Rohit Sharma"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="pl-9 bg-slate-950 border-slate-800 text-white text-sm"
+                    className="pl-9 bg-slate-50 border-slate-200 text-[#0f172a] text-sm focus:bg-white"
                   />
                 </div>
               </div>
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Official Email
               </label>
               <div className="relative">
@@ -233,13 +231,13 @@ export default function Auth() {
                   placeholder="officer@kaushalsetu.gov.in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9 bg-slate-950 border-slate-800 text-white text-sm"
+                  className="pl-9 bg-slate-50 border-slate-200 text-[#0f172a] text-sm focus:bg-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Password
               </label>
               <div className="relative">
@@ -250,12 +248,12 @@ export default function Auth() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-9 pr-10 bg-slate-950 border-slate-800 text-white text-sm"
+                  className="pl-9 pr-10 bg-slate-50 border-slate-200 text-[#0f172a] text-sm focus:bg-white"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -265,7 +263,7 @@ export default function Auth() {
             {mode === "register" && (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Department / Ministry
                   </label>
                   <div className="relative">
@@ -275,13 +273,13 @@ export default function Auth() {
                       placeholder="e.g. NSSO, MoSPI"
                       value={department}
                       onChange={(e) => setDepartment(e.target.value)}
-                      className="pl-9 bg-slate-950 border-slate-800 text-white text-sm"
+                      className="pl-9 bg-slate-50 border-slate-200 text-[#0f172a] text-sm focus:bg-white"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Target Job Role
                   </label>
                   <div className="relative">
@@ -289,7 +287,7 @@ export default function Auth() {
                     <select
                       value={currentJobRole}
                       onChange={(e) => setCurrentJobRole(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 text-white text-sm rounded-md focus:border-blue-500"
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 text-[#0f172a] text-sm rounded-md focus:bg-white font-semibold"
                     >
                       <option>Statistical Officer</option>
                       <option>Data Analyst</option>
