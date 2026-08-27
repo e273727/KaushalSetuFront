@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import Layout from "@/components/Layout";
 import { useAuth, CertificateItem } from "@/contexts/AuthContext";
 import { generateDynamicDiagnosticQuiz, QuizQuestion, MOCK_COURSES, CourseItem } from "@/lib/api";
 import {
@@ -382,55 +383,52 @@ export default function Onboarding() {
   const topGaps = gapMatrix.filter((g) => g.gap > 0).sort((a, b) => b.gap - a.gap).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/30 text-slate-900 flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Background Decorative Glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-blue-400/10 to-indigo-400/10 blur-[140px] rounded-full pointer-events-none" />
-
-      <div className="max-w-3xl w-full space-y-8 relative z-10 py-8">
-        {/* Brand Header */}
-        <div className="text-center space-y-3">
+    <Layout>
+      <div className="max-w-4xl mx-auto space-y-6 py-4">
+        {/* Brand Header Card */}
+        <div className="p-6 md:p-8 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4 text-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold uppercase tracking-wider shadow-2xs">
             <Sparkles className="h-3.5 w-3.5 text-blue-600" /> KaushalSetu Professional Profile Builder
           </div>
-          <h1 className="text-3xl font-extrabold text-[#0f172a] tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-[#0f172a] tracking-tight">
             Map Your Competency & Career State
           </h1>
-          <p className="text-slate-600 text-sm max-w-lg mx-auto font-medium">
+          <p className="text-slate-600 text-xs sm:text-sm max-w-lg mx-auto font-medium leading-relaxed">
             Establish your current skill baseline and target career role to calculate personalized learning gaps.
           </p>
-        </div>
 
-        {/* Step Progress Tracker (6 Steps) */}
-        <div className="grid grid-cols-6 gap-1 px-1 sm:px-4">
-          {[
-            { id: 1, label: "Status" },
-            { id: 2, label: "Education" },
-            { id: 3, label: "Skills" },
-            { id: 4, label: "Certificates" },
-            { id: 5, label: "Goals" },
-            { id: 6, label: "Assessment" },
-          ].map((s) => (
-            <div key={s.id} className="flex flex-col items-center gap-1 flex-1 relative">
-              <div
-                className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                  step === s.id
-                    ? "bg-blue-900 text-white ring-4 ring-blue-500/20 shadow-md"
-                    : step > s.id
-                    ? "bg-emerald-600 text-white"
-                    : "bg-slate-100 border border-slate-200 text-slate-500"
-                }`}
-              >
-                {step > s.id ? <CheckCircle2 className="h-4 w-4" /> : s.id}
+          {/* Step Progress Tracker (6 Steps) */}
+          <div className="grid grid-cols-6 gap-1 px-1 sm:px-4 pt-4 border-t border-slate-200/80">
+            {[
+              { id: 1, label: "Status" },
+              { id: 2, label: "Education" },
+              { id: 3, label: "Skills" },
+              { id: 4, label: "Certificates" },
+              { id: 5, label: "Goals" },
+              { id: 6, label: "Assessment" },
+            ].map((s) => (
+              <div key={s.id} className="flex flex-col items-center gap-1 flex-1 relative">
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    step === s.id
+                      ? "bg-[#1e3a8a] text-white ring-4 ring-blue-500/20 shadow-xs"
+                      : step > s.id
+                      ? "bg-emerald-700 text-white"
+                      : "bg-slate-100 border border-slate-200 text-slate-500"
+                  }`}
+                >
+                  {step > s.id ? <CheckCircle2 className="h-4 w-4" /> : s.id}
+                </div>
+                <span className={`text-[10px] font-bold text-center hidden sm:block ${step === s.id ? "text-[#1e3a8a]" : "text-slate-600"}`}>
+                  {s.label}
+                </span>
               </div>
-              <span className="text-[10px] font-bold text-slate-600 text-center hidden sm:block">
-                {s.label}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Main Form Card Container */}
-        <div className="p-6 md:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-xl space-y-6 text-slate-900">
+        <div className="p-6 md:p-8 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-6 text-[#0f172a]">
           
           {/* ==================== STEP 1: Current Status ==================== */}
           {step === 1 && (
@@ -445,7 +443,7 @@ export default function Onboarding() {
 
               {/* Work Experience Radio Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Do you currently have professional work experience?
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -454,18 +452,18 @@ export default function Onboarding() {
                     onClick={() => setHasWorkExperience(true)}
                     className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
                       hasWorkExperience
-                        ? "bg-blue-600/10 border-blue-500 text-white ring-1 ring-blue-500"
-                        : "bg-slate-50 border-slate-200 text-[#0f172a]"
+                        ? "bg-blue-50 border-blue-700 text-[#0f172a] ring-1 ring-blue-700 font-bold shadow-xs"
+                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-blue-50/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Briefcase className={`h-5 w-5 ${hasWorkExperience ? "text-blue-400" : "text-slate-400"}`} />
+                      <Briefcase className={`h-5 w-5 ${hasWorkExperience ? "text-[#1e3a8a]" : "text-slate-500"}`} />
                       <div>
-                        <p className="font-bold text-sm text-white">Yes, I have work experience</p>
-                        <p className="text-[11px] text-slate-400">Public officer or private professional</p>
+                        <p className="font-bold text-sm text-[#0f172a]">Yes, I have work experience</p>
+                        <p className="text-[11px] text-slate-600 font-medium">Public officer or private professional</p>
                       </div>
                     </div>
-                    {hasWorkExperience && <CheckCircle2 className="h-5 w-5 text-blue-400" />}
+                    {hasWorkExperience && <CheckCircle2 className="h-5 w-5 text-[#1e3a8a]" />}
                   </button>
 
                   <button
@@ -473,34 +471,34 @@ export default function Onboarding() {
                     onClick={() => setHasWorkExperience(false)}
                     className={`p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
                       !hasWorkExperience
-                        ? "bg-blue-600/10 border-blue-500 text-white ring-1 ring-blue-500"
-                        : "bg-slate-50 border-slate-200 text-[#0f172a]"
+                        ? "bg-blue-50 border-blue-700 text-[#0f172a] ring-1 ring-blue-700 font-bold shadow-xs"
+                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-blue-50/50"
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <GraduationCap className={`h-5 w-5 ${!hasWorkExperience ? "text-blue-400" : "text-slate-400"}`} />
+                      <GraduationCap className={`h-5 w-5 ${!hasWorkExperience ? "text-[#1e3a8a]" : "text-slate-500"}`} />
                       <div>
-                        <p className="font-bold text-sm text-white">No, I am a fresher</p>
-                        <p className="text-[11px] text-slate-400">Student or aspiring candidate</p>
+                        <p className="font-bold text-sm text-[#0f172a]">No, I am a fresher</p>
+                        <p className="text-[11px] text-slate-600 font-medium">Student or aspiring candidate</p>
                       </div>
                     </div>
-                    {!hasWorkExperience && <CheckCircle2 className="h-5 w-5 text-blue-400" />}
+                    {!hasWorkExperience && <CheckCircle2 className="h-5 w-5 text-[#1e3a8a]" />}
                   </button>
                 </div>
               </div>
 
               {/* IF EXPERIENCED */}
               {hasWorkExperience ? (
-                <div className="space-y-4 pt-2 border-t border-slate-800/80">
+                <div className="space-y-4 pt-2 border-t border-slate-200">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Current Job Role
                       </label>
                       <select
                         value={currentJobRole}
                         onChange={(e) => setCurrentJobRole(e.target.value)}
-                        className="w-full py-2.5 px-3 bg-slate-950 border border-slate-800 text-white text-sm rounded-md focus:border-blue-500 font-semibold text-blue-400"
+                        className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 text-[#0f172a] text-sm rounded-xl focus:bg-white font-bold"
                       >
                         <option>Statistical Officer</option>
                         <option>Data Analyst</option>
@@ -512,7 +510,7 @@ export default function Onboarding() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Department / Organization
                       </label>
                       <div className="relative">
@@ -522,14 +520,14 @@ export default function Onboarding() {
                           value={department}
                           onChange={(e) => setDepartment(e.target.value)}
                           placeholder="e.g. NSSO, MoSPI"
-                          className="pl-9 bg-slate-950 border-slate-800 text-white text-sm"
+                          className="pl-9 bg-slate-50 border-slate-200 text-[#0f172a] text-sm rounded-xl focus:bg-white font-bold"
                         />
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Years of Experience
                     </label>
                     <div className="grid grid-cols-5 gap-2">
@@ -538,10 +536,10 @@ export default function Onboarding() {
                           key={range}
                           type="button"
                           onClick={() => setYearsOfExperienceRange(range)}
-                          className={`py-2 text-xs font-bold rounded-lg border transition-all ${
+                          className={`py-2 text-xs font-bold rounded-xl border transition-all ${
                             yearsOfExperienceRange === range
-                              ? "bg-blue-600 text-white border-blue-500 shadow"
-                              : "bg-slate-950 text-slate-400 border-slate-800 hover:text-white"
+                              ? "bg-[#1e3a8a] text-white border-blue-900 shadow-xs"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                           }`}
                         >
                           {range} yrs
@@ -551,7 +549,7 @@ export default function Onboarding() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Current Assignment / Responsibilities
                     </label>
                     <textarea
@@ -559,22 +557,22 @@ export default function Onboarding() {
                       value={currentAssignment}
                       onChange={(e) => setCurrentAssignment(e.target.value)}
                       placeholder="I work on survey data collection, validation and statistical reporting..."
-                      className="w-full p-3 bg-slate-950 border border-slate-800 rounded-lg text-white text-sm focus:border-blue-500"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-[#0f172a] text-sm focus:bg-white font-medium"
                     />
                   </div>
 
                   {/* Previous Experience Sub-section */}
-                  <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Have you worked in any other previous roles?
                       </span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setHasPreviousRole(true)}
-                          className={`px-3 py-1 text-xs rounded-md font-bold transition-all ${
-                            hasPreviousRole ? "bg-blue-600 text-white" : "bg-slate-900 text-slate-400"
+                          className={`px-3.5 py-1 text-xs rounded-xl font-bold transition-all ${
+                            hasPreviousRole ? "bg-[#1e3a8a] text-white shadow-xs" : "bg-white border border-slate-300 text-slate-700"
                           }`}
                         >
                           Yes
@@ -582,8 +580,8 @@ export default function Onboarding() {
                         <button
                           type="button"
                           onClick={() => setHasPreviousRole(false)}
-                          className={`px-3 py-1 text-xs rounded-md font-bold transition-all ${
-                            !hasPreviousRole ? "bg-blue-600 text-white" : "bg-slate-900 text-slate-400"
+                          className={`px-3.5 py-1 text-xs rounded-xl font-bold transition-all ${
+                            !hasPreviousRole ? "bg-[#1e3a8a] text-white shadow-xs" : "bg-white border border-slate-300 text-slate-700"
                           }`}
                         >
                           No
@@ -597,19 +595,19 @@ export default function Onboarding() {
                           placeholder="Previous Role (e.g. Field Surveyor)"
                           value={previousRole}
                           onChange={(e) => setPreviousRole(e.target.value)}
-                          className="bg-slate-900 border-slate-800 text-xs text-white"
+                          className="bg-white border-slate-200 text-xs text-[#0f172a] font-bold rounded-xl"
                         />
                         <Input
                           placeholder="Experience (Years)"
                           value={previousExperienceYears}
                           onChange={(e) => setPreviousExperienceYears(e.target.value)}
-                          className="bg-slate-900 border-slate-800 text-xs text-white"
+                          className="bg-white border-slate-200 text-xs text-[#0f172a] font-bold rounded-xl"
                         />
                         <Input
                           placeholder="Main Responsibilities"
                           value={previousResponsibilities}
                           onChange={(e) => setPreviousResponsibilities(e.target.value)}
-                          className="bg-slate-900 border-slate-800 text-xs text-white"
+                          className="bg-white border-slate-200 text-xs text-[#0f172a] font-bold rounded-xl"
                         />
                       </div>
                     )}
@@ -617,15 +615,15 @@ export default function Onboarding() {
                 </div>
               ) : (
                 /* IF FRESHER */
-                <div className="space-y-4 pt-2 border-t border-slate-800/80">
+                <div className="space-y-4 pt-2 border-t border-slate-200">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Target Career Role
                     </label>
                     <select
                       value={targetCareerRole}
                       onChange={(e) => setTargetCareerRole(e.target.value)}
-                      className="w-full py-2.5 px-3 bg-slate-950 border border-slate-800 text-white text-sm rounded-md focus:border-blue-500 font-semibold text-blue-400"
+                      className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 text-[#0f172a] text-sm rounded-xl focus:bg-white font-bold"
                     >
                       <option>Statistical Officer</option>
                       <option>Data Analyst</option>
@@ -639,7 +637,7 @@ export default function Onboarding() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Target Organization / Sector
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -655,10 +653,10 @@ export default function Onboarding() {
                           key={sector}
                           type="button"
                           onClick={() => setTargetSector(sector)}
-                          className={`p-2.5 rounded-lg border text-xs font-semibold text-center transition-all ${
+                          className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all ${
                             targetSector === sector
-                              ? "bg-blue-600/20 border-blue-500 text-blue-300"
-                              : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                              ? "bg-blue-50 border-blue-700 text-[#0f172a] ring-1 ring-blue-700 shadow-xs"
+                              : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                           }`}
                         >
                           {sector}
@@ -674,23 +672,23 @@ export default function Onboarding() {
           {/* ==================== STEP 2: Education ==================== */}
           {step === 2 && (
             <div className="space-y-5 animate-in fade-in duration-300">
-              <div className="border-b border-slate-800 pb-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-indigo-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-[#1e3a8a]" />
                   Step 2: Educational Background
                 </h2>
-                <p className="text-xs text-slate-400">Academic credentials and domain foundation</p>
+                <p className="text-xs text-slate-500 font-medium">Academic credentials and domain foundation</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5 md:col-span-1">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Highest Qualification
                   </label>
                   <select
                     value={highestQualification}
                     onChange={(e) => setHighestQualification(e.target.value)}
-                    className="w-full py-2.5 px-3 bg-slate-950 border border-slate-800 text-white text-sm rounded-md focus:border-blue-500 font-semibold"
+                    className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200 text-[#0f172a] text-sm rounded-xl focus:bg-white font-bold"
                   >
                     <option>Diploma</option>
                     <option>Bachelor's</option>
@@ -701,7 +699,7 @@ export default function Onboarding() {
                 </div>
 
                 <div className="space-y-1.5 md:col-span-1">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Degree / Field of Study
                   </label>
                   <Input
@@ -709,12 +707,12 @@ export default function Onboarding() {
                     value={fieldOfStudy}
                     onChange={(e) => setFieldOfStudy(e.target.value)}
                     placeholder="e.g. M.Sc. Statistics / B.Tech CS"
-                    className="bg-slate-950 border-slate-800 text-white text-sm"
+                    className="bg-slate-50 border-slate-200 text-[#0f172a] text-sm rounded-xl focus:bg-white font-bold"
                   />
                 </div>
 
                 <div className="space-y-1.5 md:col-span-1">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Graduation Year
                   </label>
                   <Input
@@ -722,16 +720,16 @@ export default function Onboarding() {
                     value={graduationYear}
                     onChange={(e) => setGraduationYear(e.target.value)}
                     placeholder="e.g. 2021"
-                    className="bg-slate-950 border-slate-800 text-white text-sm"
+                    className="bg-slate-50 border-slate-200 text-[#0f172a] text-sm rounded-xl focus:bg-white font-bold"
                   />
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-3">
-                <BookOpen className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
-                <div className="text-xs text-slate-300 space-y-1">
-                  <span className="font-bold text-white">Why education matters:</span>
-                  <p className="text-slate-400">
+              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 flex items-start gap-3">
+                <BookOpen className="h-5 w-5 text-[#1e3a8a] shrink-0 mt-0.5" />
+                <div className="text-xs text-slate-700 space-y-1">
+                  <span className="font-extrabold text-[#0f172a]">Why education matters:</span>
+                  <p className="text-slate-600 font-medium">
                     KaushalSetu maps your academic foundation to skipping redundant beginner modules in subjects you have already mastered during formal education.
                   </p>
                 </div>
@@ -742,19 +740,19 @@ export default function Onboarding() {
           {/* ==================== STEP 3: Existing Technical Skills & Proficiency ==================== */}
           {step === 3 && (
             <div className="space-y-5 animate-in fade-in duration-300">
-              <div className="border-b border-slate-800 pb-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Code className="h-5 w-5 text-emerald-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                  <Code className="h-5 w-5 text-emerald-700" />
                   Step 3: Existing Technical Skills & Proficiency Ratings
                 </h2>
-                <p className="text-xs text-slate-400">Select skills you are familiar with and self-assess your baseline level</p>
+                <p className="text-xs text-slate-500 font-medium">Select skills you are familiar with and self-assess your baseline level</p>
               </div>
 
               {/* Categorized Skill Chips */}
               <div className="space-y-4">
                 {SKILL_CATEGORIES.map((cat) => (
                   <div key={cat.category} className="space-y-2">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                       {cat.category}
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -765,13 +763,13 @@ export default function Onboarding() {
                             key={skill}
                             type="button"
                             onClick={() => toggleSkill(skill)}
-                            className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 ${
                               isSelected
-                                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-sm"
-                                : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                                ? "bg-emerald-50 border-emerald-400 text-emerald-950 font-extrabold shadow-2xs"
+                                : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                             }`}
                           >
-                            {isSelected ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Plus className="h-3.5 w-3.5 text-slate-500" />}
+                            {isSelected ? <Check className="h-3.5 w-3.5 text-emerald-700" /> : <Plus className="h-3.5 w-3.5 text-slate-400" />}
                             {skill}
                           </button>
                         );
@@ -783,14 +781,14 @@ export default function Onboarding() {
 
               {/* Skill Proficiency Self-Ratings for Selected Skills */}
               {selectedSkills.length > 0 && (
-                <div className="pt-4 border-t border-slate-800 space-y-3">
-                  <span className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                <div className="pt-4 border-t border-slate-200 space-y-3">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
                     Self-Assessed Skill Proficiency Ratings:
                   </span>
                   <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
                     {selectedSkills.map((skill) => (
-                      <div key={skill} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <span className="font-bold text-white text-xs sm:w-32">{skill}</span>
+                      <div key={skill} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <span className="font-extrabold text-[#0f172a] text-xs sm:w-32">{skill}</span>
                         <div className="grid grid-cols-4 gap-1.5 flex-1">
                           {PROFICIENCY_OPTIONS.map((opt) => {
                             const isCurrentProf = (skillProficiencies[skill] || "Intermediate") === opt.label;
@@ -799,10 +797,10 @@ export default function Onboarding() {
                                 key={opt.label}
                                 type="button"
                                 onClick={() => updateProficiency(skill, opt.label)}
-                                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition-all text-center ${
+                                className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition-all text-center ${
                                   isCurrentProf
-                                    ? "bg-blue-600 text-white border-blue-500 shadow"
-                                    : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                                    ? "bg-[#1e3a8a] text-white border-blue-900 shadow-xs"
+                                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
                                 }`}
                               >
                                 {opt.label}
@@ -821,16 +819,16 @@ export default function Onboarding() {
           {/* ==================== STEP 4: Certificates & Training ==================== */}
           {step === 4 && (
             <div className="space-y-5 animate-in fade-in duration-300">
-              <div className="border-b border-slate-800 pb-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Award className="h-5 w-5 text-amber-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                  <Award className="h-5 w-5 text-amber-600" />
                   Step 4: Certificates & Prior Training
                 </h2>
-                <p className="text-xs text-slate-400">Add relevant certifications or government training completed</p>
+                <p className="text-xs text-slate-500 font-medium">Add relevant certifications or government training completed</p>
               </div>
 
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Have you completed any relevant training or certifications?
                 </label>
                 <div className="flex items-center gap-3">
@@ -838,7 +836,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={() => setHasCertifications(true)}
                     className={`px-4 py-2 text-xs rounded-xl font-bold border transition-all ${
-                      hasCertifications ? "bg-amber-500/20 border-amber-500/40 text-amber-300" : "bg-slate-950 border-slate-800 text-slate-400"
+                      hasCertifications ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs font-extrabold" : "bg-slate-50 border-slate-200 text-slate-700"
                     }`}
                   >
                     Yes, I have certifications
@@ -847,7 +845,7 @@ export default function Onboarding() {
                     type="button"
                     onClick={() => setHasCertifications(false)}
                     className={`px-4 py-2 text-xs rounded-xl font-bold border transition-all ${
-                      !hasCertifications ? "bg-blue-600 text-white border-blue-500" : "bg-slate-950 border-slate-800 text-slate-400"
+                      !hasCertifications ? "bg-[#1e3a8a] text-white border-blue-900 shadow-xs" : "bg-slate-50 border-slate-200 text-slate-700"
                     }`}
                   >
                     No, skip this
@@ -858,14 +856,14 @@ export default function Onboarding() {
               {hasCertifications && (
                 <div className="space-y-3 pt-2">
                   {certificates.map((cert, idx) => (
-                    <div key={idx} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 relative">
+                    <div key={idx} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 relative">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="font-bold text-amber-400">Certificate #{idx + 1}</span>
+                        <span className="font-extrabold text-amber-900">Certificate #{idx + 1}</span>
                         {certificates.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeCertificateRow(idx)}
-                            className="text-rose-400 hover:text-rose-300 text-xs flex items-center gap-1"
+                            className="text-rose-700 hover:text-rose-900 text-xs font-bold flex items-center gap-1"
                           >
                             <Trash2 className="h-3.5 w-3.5" /> Remove
                           </button>
@@ -877,19 +875,19 @@ export default function Onboarding() {
                           placeholder="Certificate Name (e.g. Python for Public Sector)"
                           value={cert.name}
                           onChange={(e) => updateCertificateField(idx, "name", e.target.value)}
-                          className="bg-slate-900 border-slate-800 text-xs text-white"
+                          className="bg-white border-slate-200 text-xs text-[#0f172a] font-bold rounded-xl"
                         />
                         <Input
                           placeholder="Provider (e.g. NSSTA / iGOT)"
                           value={cert.provider}
                           onChange={(e) => updateCertificateField(idx, "provider", e.target.value)}
-                          className="bg-slate-900 border-slate-800 text-xs text-white"
+                          className="bg-white border-slate-200 text-xs text-[#0f172a] font-bold rounded-xl"
                         />
                         <Input
                           placeholder="Year Completed (YYYY)"
                           value={cert.year}
                           onChange={(e) => updateCertificateField(idx, "year", e.target.value)}
-                          className="bg-slate-900 border-slate-800 text-xs text-white"
+                          className="bg-white border-slate-200 text-xs text-[#0f172a] font-bold rounded-xl"
                         />
                       </div>
                     </div>
@@ -899,9 +897,9 @@ export default function Onboarding() {
                     type="button"
                     variant="outline"
                     onClick={addCertificateRow}
-                    className="w-full border-dashed border-slate-700 text-slate-300 text-xs flex items-center gap-1.5"
+                    className="w-full border-dashed border-slate-300 text-slate-700 text-xs font-bold flex items-center gap-1.5 hover:bg-slate-50 rounded-xl"
                   >
-                    <Plus className="h-4 w-4" /> Add Another Certificate
+                    <Plus className="h-4 w-4 text-blue-800" /> Add Another Certificate
                   </Button>
                 </div>
               )}
@@ -911,19 +909,19 @@ export default function Onboarding() {
           {/* ==================== STEP 5: Learning Goal & Schedule ==================== */}
           {step === 5 && (
             <div className="space-y-5 animate-in fade-in duration-300">
-              <div className="border-b border-slate-800 pb-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Compass className="h-5 w-5 text-purple-400" />
+              <div className="border-b border-slate-200 pb-3">
+                <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                  <Compass className="h-5 w-5 text-[#1e3a8a]" />
                   Step 5: Learning Goal & Study Commitment
                 </h2>
-                <p className="text-xs text-slate-400">Configure your adaptive roadmap pacing and daily schedule</p>
+                <p className="text-xs text-slate-500 font-medium">Configure your adaptive roadmap pacing and daily schedule</p>
               </div>
 
               {/* Target Course / Pathway Selector (Drives Diagnostic Test) */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
                   <span>Primary Target Course / Learning Pathway</span>
-                  <span className="text-[10px] text-blue-400 font-normal">Diagnostic test will assess prerequisites for this course</span>
+                  <span className="text-[10px] text-blue-900 font-bold">Diagnostic test will assess prerequisites for this course</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {MOCK_COURSES.map((crs) => {
@@ -935,18 +933,18 @@ export default function Onboarding() {
                         onClick={() => setSelectedCourseId(crs.id)}
                         className={`p-3.5 rounded-xl border text-left transition-all space-y-1.5 ${
                           isSelected
-                            ? "bg-blue-600/20 border-blue-500 text-white ring-1 ring-blue-500 shadow-md"
-                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                            ? "bg-blue-50 border-blue-700 text-[#0f172a] ring-1 ring-blue-700 shadow-xs font-bold"
+                            : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-extrabold text-blue-400">{crs.provider}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">Level {crs.level}</span>
+                          <span className="text-[11px] font-extrabold text-[#1e3a8a]">{crs.provider}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-extrabold">Level {crs.level}</span>
                         </div>
-                        <p className="text-xs font-bold text-slate-100 leading-snug">{crs.title}</p>
+                        <p className="text-xs font-bold text-[#0f172a] leading-snug">{crs.title}</p>
                         <div className="flex flex-wrap gap-1 pt-1">
                           {crs.competencies.map((comp, cIdx) => (
-                            <span key={cIdx} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300 font-medium">
+                            <span key={cIdx} className="text-[9px] px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-700 font-bold">
                               Prerequisite: {comp}
                             </span>
                           ))}
@@ -959,7 +957,7 @@ export default function Onboarding() {
 
               {/* Learning Goal */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   What do you primary want to achieve?
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -968,10 +966,10 @@ export default function Onboarding() {
                       key={goal}
                       type="button"
                       onClick={() => setLearningGoal(goal)}
-                      className={`p-3 rounded-xl border text-xs font-semibold text-left transition-all ${
+                      className={`p-3 rounded-xl border text-xs font-bold text-left transition-all ${
                         learningGoal === goal
-                          ? "bg-purple-600/20 border-purple-500 text-purple-300 ring-1 ring-purple-500"
-                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                          ? "bg-blue-50 border-blue-700 text-[#0f172a] ring-1 ring-blue-700 shadow-xs"
+                          : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                       }`}
                     >
                       {goal}
@@ -983,7 +981,7 @@ export default function Onboarding() {
               {/* Target Timeline & Daily Time */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Target Timeline
                   </label>
                   <div className="space-y-1.5">
@@ -992,10 +990,10 @@ export default function Onboarding() {
                         key={t}
                         type="button"
                         onClick={() => setTargetTimeline(t)}
-                        className={`w-full p-2.5 rounded-lg border text-xs font-semibold text-left transition-all ${
+                        className={`w-full p-2.5 rounded-xl border text-xs font-bold text-left transition-all ${
                           targetTimeline === t
-                            ? "bg-blue-600/20 border-blue-500 text-blue-300"
-                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                            ? "bg-blue-50 border-blue-700 text-[#0f172a] ring-1 ring-blue-700 shadow-xs"
+                            : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
                         {t}
@@ -1005,7 +1003,7 @@ export default function Onboarding() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Daily Time Dedicated to Learning
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -1016,8 +1014,8 @@ export default function Onboarding() {
                         onClick={() => setDailyLearningTime(time)}
                         className={`p-3 rounded-xl border text-xs font-bold text-center transition-all ${
                           dailyLearningTime === time
-                            ? "bg-emerald-600/20 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500"
-                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                            ? "bg-emerald-50 border-emerald-400 text-emerald-950 ring-1 ring-emerald-400 shadow-xs font-black"
+                            : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
                         {time}
@@ -1026,7 +1024,7 @@ export default function Onboarding() {
                   </div>
 
                   <div className="pt-2 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Preferred Learning Days
                     </label>
                     <div className="flex flex-wrap gap-1.5">
@@ -1037,10 +1035,10 @@ export default function Onboarding() {
                             key={day}
                             type="button"
                             onClick={() => toggleWeekday(day)}
-                            className={`px-2.5 py-1 rounded-md text-[11px] font-bold border transition-all ${
+                            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border transition-all ${
                               isDaySel
-                                ? "bg-purple-600 text-white border-purple-500"
-                                : "bg-slate-950 border-slate-800 text-slate-400"
+                                ? "bg-[#1e3a8a] text-white border-blue-900 shadow-xs"
+                                : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                             }`}
                           >
                             {day.slice(0, 3)}
@@ -1057,17 +1055,17 @@ export default function Onboarding() {
           {/* ==================== STEP 6: Diagnostic Test & Competency Gap Analysis ==================== */}
           {step === 6 && (
             <div className="space-y-5 animate-in fade-in duration-300">
-              <div className="border-b border-slate-800 pb-3 flex items-center justify-between">
+              <div className="border-b border-slate-200 pb-3 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <HelpCircle className="h-5 w-5 text-purple-400" />
+                  <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5 text-[#1e3a8a]" />
                     Step 6: Diagnostic Skill Assessment & Gap Analysis
                   </h2>
-                  <p className="text-xs text-slate-400">
-                    Questions generated dynamically for role <strong className="text-blue-400">{activeTargetRole}</strong> and skills ({dynamicQuestions.length} Questions)
+                  <p className="text-xs text-slate-500 font-medium">
+                    Questions generated dynamically for role <strong className="text-blue-900">{activeTargetRole}</strong> and skills ({dynamicQuestions.length} Questions)
                   </p>
                 </div>
-                <Badge className="bg-purple-500/20 text-purple-300 text-xs border-purple-500/30">
+                <Badge className="bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">
                   {dynamicQuestions.length} Custom Questions
                 </Badge>
               </div>
@@ -1076,21 +1074,21 @@ export default function Onboarding() {
               {(() => {
                 const matchedCourse = MOCK_COURSES.find((c) => c.id === selectedCourseId);
                 return (
-                  <div className="p-3.5 rounded-xl bg-blue-950/60 border border-blue-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
+                      <div className="h-9 w-9 rounded-xl bg-[#1e3a8a] text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
                         <BookOpen className="h-5 w-5 text-amber-300" />
                       </div>
                       <div>
-                        <p className="text-xs font-extrabold text-white flex items-center gap-2">
+                        <p className="text-xs font-extrabold text-[#0f172a] flex items-center gap-2">
                           <span>Target Course: {matchedCourse?.title || "Selected Pathway"}</span>
                         </p>
-                        <p className="text-[11px] text-blue-300 font-medium">
+                        <p className="text-[11px] text-blue-900 font-bold">
                           Assessing Prerequisite Competencies: {matchedCourse?.competencies.join(", ") || "Core Skills"}
                         </p>
                       </div>
                     </div>
-                    <Badge className="bg-blue-600 text-white border-blue-400 text-[10px] font-bold shrink-0 self-start sm:self-auto">
+                    <Badge className="bg-[#1e3a8a] text-white border-blue-900 text-[10px] font-bold shrink-0 self-start sm:self-auto shadow-xs">
                       Course Assessment
                     </Badge>
                   </div>
@@ -1100,7 +1098,7 @@ export default function Onboarding() {
               {/* Questions List */}
               <div className="space-y-4">
                 {dynamicQuestions.map((q, idx) => (
-                  <div key={q.id} className="p-4.5 rounded-2xl bg-white border border-slate-200/90 space-y-3 shadow-xs text-[#0f172a]">
+                  <div key={q.id} className="p-4.5 rounded-2xl bg-white border border-slate-200 space-y-3 shadow-xs text-[#0f172a]">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-extrabold text-blue-900">Question {idx + 1} of {dynamicQuestions.length}</span>
                       <span className="text-slate-500 font-bold">Domain: {q.competencyName}</span>
@@ -1155,7 +1153,7 @@ export default function Onboarding() {
                   type="button"
                   onClick={handleEvaluateTest}
                   disabled={Object.keys(selectedAnswers).length < dynamicQuestions.length}
-                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs py-3 rounded-xl shadow-lg"
+                  className="w-full bg-[#1e3a8a] hover:bg-blue-900 text-white font-bold text-xs py-3.5 rounded-xl shadow-xs"
                 >
                   Evaluate {dynamicQuestions.length} Questions & Calculate Gap Matrix
                 </Button>
@@ -1164,13 +1162,13 @@ export default function Onboarding() {
               {/* Skill Gap Analysis Result Matrix */}
               {testSubmitted && (
                 <div className="space-y-4 pt-2 animate-in fade-in duration-300">
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-white text-sm flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-blue-400" />
+                      <span className="font-bold text-[#0f172a] text-sm flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-[#1e3a8a]" />
                         Competency Gap Analysis Result
                       </span>
-                      <Badge className="bg-blue-600/30 text-blue-300 text-xs">
+                      <Badge className="bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">
                         Target Role: {activeTargetRole}
                       </Badge>
                     </div>
@@ -1178,7 +1176,7 @@ export default function Onboarding() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="border-b border-slate-800 text-slate-400">
+                          <tr className="border-b border-slate-200 text-slate-600 font-bold">
                             <th className="py-2 px-2 font-bold">Competency Domain</th>
                             <th className="py-2 px-2 font-bold text-center">Self-Assessed</th>
                             <th className="py-2 px-2 font-bold text-center">Test Verified</th>
@@ -1186,20 +1184,20 @@ export default function Onboarding() {
                             <th className="py-2 px-2 font-bold text-right">Skill Gap</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/60">
+                        <tbody className="divide-y divide-slate-200">
                           {gapMatrix.map((row) => (
-                            <tr key={row.name} className="hover:bg-slate-900/50">
-                              <td className="py-2.5 px-2 font-semibold text-white">{row.name}</td>
-                              <td className="py-2.5 px-2 text-center text-slate-300">Level {row.selfLevel}</td>
-                              <td className="py-2.5 px-2 text-center text-blue-400 font-bold">Level {row.testVerifiedLevel}</td>
-                              <td className="py-2.5 px-2 text-center text-slate-400">Level {row.reqLevel}</td>
+                            <tr key={row.name} className="hover:bg-white/80">
+                              <td className="py-2.5 px-2 font-bold text-[#0f172a]">{row.name}</td>
+                              <td className="py-2.5 px-2 text-center text-slate-700 font-medium">Level {row.selfLevel}</td>
+                              <td className="py-2.5 px-2 text-center text-blue-900 font-extrabold">Level {row.testVerifiedLevel}</td>
+                              <td className="py-2.5 px-2 text-center text-slate-600 font-medium">Level {row.reqLevel}</td>
                               <td className="py-2.5 px-2 text-right">
                                 {row.gap > 0 ? (
-                                  <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">
+                                  <span className="px-2 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-900 font-bold text-[11px]">
                                     {row.gap} {row.gap === 1 ? "Level" : "Levels"}
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                                  <span className="px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold text-[11px]">
                                     Satisfied
                                   </span>
                                 )}
@@ -1222,18 +1220,18 @@ export default function Onboarding() {
                   />
 
                   {/* Summary Alert Box */}
-                  <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/80 to-slate-900 border border-emerald-500/40 space-y-1.5 text-center">
-                    <div className="flex items-center justify-center gap-2 text-emerald-400 font-bold text-sm">
-                      <Sparkles className="h-4 w-4" />
+                  <div className="p-4 rounded-xl bg-emerald-50/90 border border-emerald-200 space-y-1.5 text-center shadow-xs">
+                    <div className="flex items-center justify-center gap-2 text-emerald-900 font-extrabold text-sm">
+                      <Sparkles className="h-4 w-4 text-emerald-700" />
                       Gap Engine Analysis Complete!
                     </div>
-                    <p className="text-xs text-slate-300">
+                    <p className="text-xs text-slate-700 font-medium">
                       Your largest competency gaps are{" "}
-                      <strong className="text-white">
+                      <strong className="text-[#0f172a]">
                         {topGaps.map((g) => g.name).join(", ") || "Advanced Data Analytics"}
                       </strong>.
                     </p>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-600 font-medium">
                       KaushalSetu has initialized your personalized learning roadmap targeting these specific gap areas.
                     </p>
                   </div>
@@ -1270,7 +1268,7 @@ export default function Onboarding() {
                 type="button"
                 onClick={handleFinish}
                 disabled={isSubmitting || !testSubmitted}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-6 py-2.5 rounded-lg flex items-center gap-1.5 shadow-lg shadow-emerald-500/25"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl flex items-center gap-2 shadow-xs"
               >
                 {isSubmitting ? (
                   "Finalizing Setup..."
@@ -1284,6 +1282,6 @@ export default function Onboarding() {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
